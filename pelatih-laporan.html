@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+<title>Input Laporan Sesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  body {
+    background: radial-gradient(circle at 8% 12%, #efeafe 0%, transparent 42%),
+                radial-gradient(circle at 95% 85%, #dff6f0 0%, transparent 45%),
+                linear-gradient(160deg, #f3f1fd 0%, #eef4fc 55%, #eaf5fd 100%);
+    min-height: 100vh;
+    padding: 26px;
+  }
+
+  .app-shell {
+    max-width: 1520px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+    display: flex;
+    overflow: hidden;
+    min-height: calc(100vh - 52px);
+  }
+
+  .sidebar {
+    width: 260px;
+    flex: none;
+    background: var(--purple-900);
+    color: #fff;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar .brand { display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 40px; padding: 0 8px; }
+  .sidebar .brand-mark { width: 76px; height: 76px; object-fit: contain; flex: none; }
+
+  .nav-group { display: flex; flex-direction: column; gap: 6px; }
+  .sidebar nav a, .sidebar nav button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; color: rgba(255,255,255,.68); font-family: inherit; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s;
+    background: transparent; border: none;
+  }
+  .sidebar nav a:hover, .sidebar nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar nav a.active { background: #fff; color: var(--purple-700); font-weight: 700; box-shadow: 0 8px 18px rgba(28,15,64,.18); }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .nav-bottom { border-top: 1px solid rgba(255,255,255,.12); padding-top: 16px; margin-top: 16px; }
+  .sidebar .nav-bottom button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .15s, color .15s;
+    background: transparent; border: none; color: #ffb9a8;
+  }
+  .sidebar .nav-bottom button:hover { background: rgba(224,86,58,.18); color: #fff; }
+
+  .sidebar-toggle {
+    display: none; flex: none; width: 40px; height: 40px; align-items: center; justify-content: center;
+    background: #fff; border: 1.5px solid #f0eefb; border-radius: 12px; font-size: 19px; color: var(--purple-700);
+    cursor: pointer; box-shadow: var(--shadow-card);
+  }
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(20, 12, 40, .45); z-index: 999;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .main-content { flex: 1; padding: 32px 34px; min-width: 0; }
+  .main-topbar h1 { font-size: 23px; color: var(--ink); }
+  .main-topbar .sub { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+  .breadcrumb { font-size: 13px; color: var(--purple-600); font-weight: 600; margin: 18px 0 20px; display: inline-flex; align-items: center; gap: 6px; }
+
+  .card { background: #fff; border: 1.5px solid #f0eefb; border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 28px 32px; margin-bottom: 20px; }
+
+  #template-panel { background: var(--purple-100); border-color: #ded4fb; }
+  #template-panel h3 { color: var(--purple-700); }
+  #template-panel #template-text { font-size: 13.5px; color: var(--ink); line-height: 1.65; }
+  .card h3 { font-size: 16px; margin-bottom: 4px; }
+  .card .card-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid #ddd9f7;
+    font-family: inherit; font-size: 14px; background: var(--sky);
+  }
+  .field .hint { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+  .rt-toolbar { display: flex; gap: 6px; margin-bottom: 6px; }
+  .rt-btn {
+    font-family: inherit; border: 1.5px solid #ddd9f7; background: #fff; color: var(--ink-soft);
+    border-radius: 8px; padding: 5px 11px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  }
+  .rt-btn:hover { background: var(--purple-100); color: var(--purple-700); border-color: var(--purple-300); }
+  .rt-btn.rt-italic { font-style: italic; }
+
+  .tanggal-jam-row { display: flex; gap: 10px; }
+  .tanggal-jam-row input[type="date"] { flex: 1; }
+
+  .tipe-toggle { display: flex; gap: 10px; }
+  .tipe-toggle button {
+    flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid #ddd9f7; background: var(--sky);
+    font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
+  }
+  .tipe-toggle button.active { background: var(--purple-600); color: #fff; border-color: var(--purple-600); }
+
+  .anak-add-row { display: flex; gap: 10px; align-items: flex-end; }
+  .anak-add-row .field { flex: 1; margin-bottom: 0; }
+  .anak-add-row button { flex: none; }
+
+  .anak-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .anak-row { background: var(--sky); border-radius: var(--radius-sm); padding: 12px 14px; border: 1.5px solid #ddd9f7; }
+  .anak-row-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .anak-row-head strong { font-size: 13.5px; color: var(--ink); }
+  .anak-row-head span { font-size: 12px; color: var(--ink-soft); display: block; }
+  .anak-row .remove-anak { background: var(--coral-100); color: var(--coral-600); font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-pill); flex: none; }
+  .anak-row textarea { background: #fff; }
+
+  .hadir-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
+  .hadir-btn {
+    flex: none; padding: 6px 13px; border-radius: var(--radius-pill); border: 1.5px solid #ddd9f7; background: #fff;
+    font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
+  }
+  .hadir-btn.active { background: var(--teal-700, #1a9c78); color: #fff; border-color: var(--teal-700, #1a9c78); }
+  .hadir-btn.tidak-hadir.active { background: var(--coral-600); color: #fff; border-color: var(--coral-600); }
+
+  .anak-tag-hadir, .anak-tag-tidak-hadir {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill);
+    margin-left: 8px; vertical-align: middle;
+  }
+  .anak-tag-hadir { background: #e3f7ef; color: var(--teal-700, #1a9c78); }
+  .anak-tag-tidak-hadir { background: #fde9ea; color: var(--coral-600); }
+  .tidak-hadir-hint { font-size: 12.5px; color: var(--coral-600); background: #fde9ea; border-radius: var(--radius-sm); padding: 8px 10px; margin: 0; }
+
+  .anak-single-card { background: var(--sky); border-radius: var(--radius-sm); padding: 12px 14px; border: 1.5px solid #ddd9f7; margin-top: 4px; display: none; }
+  .anak-single-card.show { display: block; }
+  .anak-single-card strong { font-size: 13.5px; color: var(--ink); display: block; }
+  .anak-single-card span { font-size: 12px; color: var(--ink-soft); }
+
+  .foto-link-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .foto-link-row { display: flex; gap: 10px; align-items: flex-start; background: var(--sky); border: 1.5px solid #ddd9f7; border-radius: var(--radius-sm); padding: 10px; }
+  .foto-link-preview {
+    width: 64px; height: 64px; border-radius: 10px; background: var(--purple-100); flex: none;
+    display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--purple-700); font-size: 9.5px; text-align: center; padding: 4px;
+  }
+  .foto-link-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .foto-link-fields { flex: 1; min-width: 0; }
+  .foto-link-fields input {
+    width: 100%; padding: 9px 11px; border-radius: var(--radius-sm); border: 1.5px solid #ddd9f7;
+    font-family: inherit; font-size: 13px; background: #fff;
+  }
+  .foto-link-fields .upload-progress { font-size: 11.5px; color: var(--purple-700); margin-top: 5px; }
+  .foto-link-fields .upload-progress.err-text { color: var(--coral-600); }
+  .foto-link-remove {
+    flex: none; width: 28px; height: 28px; border-radius: 50%; background: #fde9ea; color: var(--coral-600);
+    font-size: 13px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; margin-top: 2px;
+  }
+  .foto-link-remove:hover { background: var(--coral-600); color: #fff; }
+  .foto-link-remove[hidden] { visibility: hidden; }
+
+  .form-actions { margin-top: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .form-msg { font-size: 13px; font-weight: 600; }
+  .form-msg.ok { color: var(--teal-700); }
+  .form-msg.err { color: var(--coral-600); }
+
+  .success-panel { display: none; }
+  .success-panel.show { display: block; }
+  .success-panel .icon-ok { font-size: 40px; margin-bottom: 8px; }
+  .kirim-row-wrap { margin-bottom: 12px; }
+  .kirim-row { display: flex; justify-content: space-between; align-items: center; background: var(--sky); border-radius: var(--radius-sm) var(--radius-sm) 0 0; padding: 12px 14px; border: 1.5px solid #ddd9f7; gap: 10px; flex-wrap: wrap; }
+  .kirim-row strong { font-size: 13.5px; }
+  .kirim-row span { font-size: 12px; color: var(--ink-soft); display: block; }
+  .kirim-row-actions { display: flex; gap: 8px; flex-wrap: wrap; flex: none; }
+  .kirim-pdf-btn { background: var(--purple-100); color: var(--purple-700); font-size: 12.5px; font-weight: 700; padding: 9px 14px; border-radius: var(--radius-pill); border: none; cursor: pointer; white-space: nowrap; }
+  .kirim-pdf-btn:hover { background: var(--purple-200, #ddd9f7); }
+  .kirim-wa-btn { background: #25D366; color: #fff; font-size: 12.5px; font-weight: 700; padding: 9px 14px; border-radius: var(--radius-pill); border: none; cursor: pointer; white-space: nowrap; }
+  .kirim-wa-btn:hover { background: #1ea952; }
+  .kirim-wa-btn:disabled { background: #b9bcc2; cursor: not-allowed; }
+
+  .copy-text-panel { background: #fff; border: 1.5px solid #ddd9f7; border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm); padding: 10px 14px 12px; }
+  .copy-text-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; }
+  .copy-text-head span { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .03em; }
+  .copy-text-btn { background: var(--purple-100); color: var(--purple-700); font-size: 12px; font-weight: 700; padding: 6px 13px; border-radius: var(--radius-pill); border: none; cursor: pointer; white-space: nowrap; flex: none; }
+  .copy-text-btn:hover { background: var(--purple-200, #ddd9f7); }
+  .copy-text-body { font-family: inherit; font-size: 12.5px; color: var(--ink); white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow-y: auto; margin: 0; background: var(--sky); border-radius: 10px; padding: 10px 12px; }
+
+  @media (max-width: 1080px) {
+    body { padding: 0; }
+    .app-shell { border-radius: 0; min-height: 100vh; }
+    .sidebar-toggle { display: flex; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 260px; max-width: 80vw;
+      transform: translateX(-100%); transition: transform .25s ease; z-index: 1000; box-shadow: 0 0 0 transparent;
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 12px 0 32px rgba(20,12,40,.25); }
+    .anak-add-row { flex-direction: column; align-items: stretch; }
+    .kirim-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a href="/dashboard-pelatih" class="brand"><img src="assets/images/logo.png" alt="KidsPodu" class="brand-mark"></a>
+
+    <nav class="nav-group">
+      <a href="/dashboard-pelatih">Dashboard</a>
+      <a href="/pelatih-riwayat">Riwayat Laporan</a>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="nav-bottom">
+      <button type="button" id="logout-btn">Keluar</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main-content">
+    <div class="main-topbar">
+      <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Buka menu">☰</button>
+      <div>
+        <h1 id="page-title">Input Laporan Sesi</h1>
+        <p class="sub" id="who-am-i">Memuat...</p>
+      </div>
+    </div>
+    <a href="#" id="breadcrumb-back" class="breadcrumb">← Kembali pilih sesi</a>
+
+    <div class="card" id="template-panel" style="display:none;">
+      <h3>📋 Contoh Template Laporan</h3>
+      <p class="card-sub" id="template-sub">Contoh dari admin buat program ini. Kamu bisa ikuti gaya penulisannya.</p>
+      <div id="template-text"></div>
+    </div>
+
+    <div class="card" id="form-card">
+      <h3 id="form-title">Laporan Sesi</h3>
+      <p class="card-sub" id="form-sub">—</p>
+
+      <form id="form-laporan">
+        <div class="field" id="wrap-tipe-toggle">
+          <label>Jenis Sesi</label>
+          <div class="tipe-toggle" id="tipe-toggle"></div>
+        </div>
+
+        <div class="field">
+          <label id="label-tanggal-jam">Tanggal Sesi</label>
+          <div class="tanggal-jam-row">
+            <input type="date" id="f-tanggal" required />
+          </div>
+        </div>
+
+        <div class="field" id="wrap-anak-private">
+          <label>Nama Anak</label>
+          <select id="anak-select-private">
+            <option value="">Pilih anak yang didampingi...</option>
+          </select>
+          <div class="anak-single-card" id="anak-single-card">
+            <strong id="anak-single-nama"></strong>
+            <span id="anak-single-ortu"></span>
+          </div>
+        </div>
+
+        <div class="field" id="wrap-anak-kelompok" style="display:none;">
+          <label id="label-tambah-anak">Tambah Anak ke Sesi</label>
+          <div class="anak-add-row">
+            <div class="field">
+              <select id="anak-select-kelompok">
+                <option value="">Pilih anak...</option>
+              </select>
+            </div>
+            <button type="button" class="btn btn-soft-purple" id="btn-tambah-anak">+ Tambah</button>
+          </div>
+          <div class="anak-list" id="anak-list"></div>
+          <p class="hint" id="anak-kelompok-empty-hint">Belum ada anak ditambahkan.</p>
+          <p class="hint" id="anak-kelompok-max-hint" style="display:none;"></p>
+        </div>
+
+        <div class="field">
+          <label id="label-laporan">Laporan Sesi</label>
+          <div class="rt-toolbar" id="rt-toolbar-laporan">
+            <button type="button" class="rt-btn" data-wrap="*" title="Tebal">B</button>
+            <button type="button" class="rt-btn rt-italic" data-wrap="_" title="Miring">I</button>
+            <button type="button" class="rt-btn" data-bullet="1" title="Bullet list">• List</button>
+          </div>
+          <textarea id="f-laporan" rows="4" required placeholder="Tulis catatan perkembangan / hasil sesi..."></textarea>
+          <p class="hint">Format teks: apit dengan <strong>*tebal*</strong> untuk tebal, <strong>_miring_</strong> untuk miring, awali baris dengan <strong>- </strong> untuk bullet.</p>
+          <p class="hint" id="hint-laporan-kelompok" style="display:none;">Ini laporan umum untuk seluruh kelompok. Kamu bisa menambahkan catatan khusus per anak di kolom masing-masing di atas.</p>
+        </div>
+
+        <div class="field">
+          <label>Dokumentasi (Foto)</label>
+          <p class="hint">
+            Cara dapetin link foto: buka <strong>imgbb.com</strong> (tidak perlu bikin akun) →
+            upload/drag foto ke sana → centang <strong>"Don't autodelete"</strong> → setelah
+            selesai, di kolom Embed codes pilih <strong>"HTML full linked"</strong> → dari kode
+            yang muncul, salin (copy) cuma bagian di dalam <strong>src="..."</strong> → tempel
+            (paste) ke kotak di bawah ini. Bisa tambah lebih dari satu foto.
+          </p>
+          <div class="foto-link-list" id="foto-link-list"></div>
+          <button type="button" class="btn btn-soft-purple" id="btn-tambah-foto">+ Tambah Link Foto</button>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" id="btn-submit">Simpan Laporan</button>
+          <span class="form-msg" id="form-msg"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="card success-panel" id="success-panel">
+      <div class="icon-ok">✅</div>
+      <h3>Laporan berhasil disimpan!</h3>
+      <p class="card-sub">
+        Klik tombol di bawah untuk tiap anak: PDF laporan otomatis ke-download, lalu WhatsApp langsung terbuka dengan pesan siap kirim.
+        Tinggal lampirkan (📎) file PDF yang baru saja terunduh ke chat itu, lalu kirim.
+      </p>
+      <div id="kirim-wa-list"></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="button" id="btn-laporan-baru">+ Buat Laporan Baru</button>
+        <a href="/dashboard-pelatih" class="btn btn-outline">Kembali ke Dashboard</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { guardDashboard, wireLogout } from "./js/auth-guard.js";
+  import { listAnakByProgram } from "./js/anak-service.js";
+  import { createLaporan, updateLaporan, getLaporanById, buildLaporanMessage, buildWaLink, getAllowedTipeSesi, TIPE_SESI_LABEL, TIPE_SESI_ICON, TIPE_SESI_MAX_ANAK, isTipeMultiAnak, isAnakHadir } from "./js/report-service.js";
+  import { buildLaporanPdf, laporanPdfFilename } from "./js/report-pdf.js";
+  import { getProgramTemplate } from "./js/program-template-service.js";
+  import { attachRichTextToolbar } from "./js/rich-text-toolbar.js";
+  import { richTextToHtml } from "./js/rich-text.js";
+
+  attachRichTextToolbar(document.getElementById("rt-toolbar-laporan"), document.getElementById("f-laporan"));
+
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get("editId");
+
+  let programId = params.get("programId");
+  let programTitle = params.get("programTitle") || programId;
+  let sub = params.get("sub") || "";
+  let editingReport = null;
+
+  if (editId) {
+    try {
+      editingReport = await getLaporanById(editId);
+    } catch (err) {
+      console.error(err);
+    }
+    if (!editingReport) {
+      alert("Laporan tidak ditemukan atau sudah dihapus.");
+      window.location.href = "/pelatih-riwayat";
+      throw new Error("editingReport tidak ditemukan — menghentikan eksekusi, sedang redirect.");
+    }
+    programId = editingReport.programId;
+    programTitle = editingReport.programTitle;
+    sub = editingReport.subProgram || "";
+  } else if (!programId || (programId === "olahraga" && !sub)) {
+    window.location.href = "/dashboard-pelatih";
+  }
+
+  document.getElementById("breadcrumb-back").href = editId
+    ? "pelatih-riwayat.html"
+    : (programId === "olahraga" ? `pelatih-program.html?id=${encodeURIComponent(programId)}` : "dashboard-pelatih.html");
+  document.getElementById("breadcrumb-back").textContent = editId ? "← Kembali ke riwayat" : "← Kembali pilih sesi";
+  document.getElementById("form-title").textContent = editId
+    ? (sub ? `Edit Laporan — ${sub}` : `Edit Laporan — ${programTitle}`)
+    : (sub ? `Laporan Sesi — ${sub}` : `Laporan Sesi — ${programTitle}`);
+  document.getElementById("form-sub").textContent = sub ? `Program: ${programTitle} · Sesi: ${sub}` : `Program: ${programTitle}`;
+  document.getElementById("page-title").textContent = editId
+    ? (sub ? `Edit Laporan — ${sub}` : `Edit Laporan — ${programTitle}`)
+    : (sub ? `Input Laporan — ${sub}` : `Input Laporan — ${programTitle}`);
+  document.getElementById("btn-submit").textContent = editId ? "Simpan Perubahan" : "Simpan Laporan";
+
+  try {
+    const tpl = await getProgramTemplate(programId, sub);
+    if (tpl && tpl.trim()) {
+      document.getElementById("template-sub").textContent =
+        `Contoh dari admin untuk program ${programTitle}${sub ? " · " + sub : ""}. Kamu bisa ikuti gaya penulisannya.`;
+      document.getElementById("template-text").innerHTML = richTextToHtml(tpl);
+      document.getElementById("template-panel").style.display = "";
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  let me = null;
+  guardDashboard("pelatih", (userData) => {
+    me = userData;
+    document.getElementById("who-am-i").textContent =
+      `Masuk sebagai ${userData.name || userData.email} · Pelatih`;
+  });
+  wireLogout("#logout-btn");
+
+  const sidebarEl = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  function openSidebar() { sidebarEl.classList.add("open"); sidebarOverlay.classList.add("open"); }
+  function closeSidebar() { sidebarEl.classList.remove("open"); sidebarOverlay.classList.remove("open"); }
+  sidebarToggle.addEventListener("click", () => {
+    sidebarEl.classList.contains("open") ? closeSidebar() : openSidebar();
+  });
+  sidebarOverlay.addEventListener("click", closeSidebar);
+  sidebarEl.querySelectorAll("a, button").forEach((el) => el.addEventListener("click", closeSidebar));
+
+  const now0 = new Date();
+  document.getElementById("f-tanggal").valueAsDate = now0;
+
+
+  let anakOptions = [];
+  try {
+    anakOptions = await listAnakByProgram(programId, sub);
+  } catch (err) {
+    console.error(err);
+  }
+
+  function fillSelect(selectEl, excludeIds = []) {
+    const opts = anakOptions.filter((a) => !excludeIds.includes(a.id));
+    selectEl.innerHTML =
+      `<option value="">${opts.length ? "Pilih anak..." : "Tidak ada anak terdaftar di sesi ini"}</option>` +
+      opts.map((a) => `<option value="${a.id}">${a.nama}</option>`).join("");
+  }
+
+  const selectPrivate = document.getElementById("anak-select-private");
+  const selectKelompok = document.getElementById("anak-select-kelompok");
+  fillSelect(selectPrivate);
+  fillSelect(selectKelompok);
+
+  const allowedTipes = getAllowedTipeSesi(programId, sub);
+  let tipe = (editId && editingReport && allowedTipes.includes(editingReport.tipe)) ? editingReport.tipe : allowedTipes[0];
+  const wrapTipeToggle = document.getElementById("wrap-tipe-toggle");
+  const tipeToggleEl = document.getElementById("tipe-toggle");
+  const wrapPrivate = document.getElementById("wrap-anak-private");
+  const wrapKelompok = document.getElementById("wrap-anak-kelompok");
+  const labelLaporan = document.getElementById("label-laporan");
+  const labelTambahAnak = document.getElementById("label-tambah-anak");
+  const hintKelompok = document.getElementById("hint-laporan-kelompok");
+  const maxHint = document.getElementById("anak-kelompok-max-hint");
+
+  if (allowedTipes.length <= 1) {
+    wrapTipeToggle.style.display = "none";
+  } else {
+    tipeToggleEl.innerHTML = allowedTipes.map((t) => `
+      <button type="button" class="${t === tipe ? "active" : ""}" data-tipe="${t}">
+        ${TIPE_SESI_ICON[t] || ""} ${TIPE_SESI_LABEL[t] || t}
+      </button>
+    `).join("");
+  }
+
+  function applyTipeUI() {
+    const multi = isTipeMultiAnak(tipe);
+    wrapPrivate.style.display = multi ? "none" : "block";
+    wrapKelompok.style.display = multi ? "block" : "none";
+    const label = TIPE_SESI_LABEL[tipe] || tipe;
+    labelLaporan.textContent = multi ? `Laporan Umum ${label}` : "Laporan Sesi";
+    labelTambahAnak.textContent = `Tambah Anak ke Sesi ${label}`;
+    hintKelompok.style.display = multi ? "block" : "none";
+    hintKelompok.textContent = `Ini laporan umum untuk seluruh sesi ${label.toLowerCase()}. Kamu bisa menambahkan catatan khusus per anak di kolom masing-masing di atas.`;
+
+    const max = TIPE_SESI_MAX_ANAK[tipe];
+    maxHint.style.display = max ? "block" : "none";
+  }
+  applyTipeUI();
+
+  tipeToggleEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-tipe]");
+    if (!btn) return;
+    tipeToggleEl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    tipe = btn.dataset.tipe;
+    applyTipeUI();
+    const max = TIPE_SESI_MAX_ANAK[tipe];
+    if (max && anakKelompok.length > max) anakKelompok = anakKelompok.slice(0, max);
+    fillSelect(selectKelompok, anakKelompok.map((a) => a.id));
+    renderAnakList();
+  });
+
+
+  let anakPrivate = null;
+  selectPrivate.addEventListener("change", () => {
+    const anak = anakOptions.find((a) => a.id === selectPrivate.value);
+    anakPrivate = anak || null;
+    const card = document.getElementById("anak-single-card");
+    if (anak) {
+      document.getElementById("anak-single-nama").textContent = anak.nama;
+      document.getElementById("anak-single-ortu").textContent =
+        `Orang tua: ${anak.orangTua?.nama || "—"} · WA: ${anak.orangTua?.noWa || "—"}`;
+      card.classList.add("show");
+    } else {
+      card.classList.remove("show");
+    }
+  });
+
+  let anakKelompok = [];
+  const anakListEl = document.getElementById("anak-list");
+  const emptyHint = document.getElementById("anak-kelompok-empty-hint");
+  const btnTambahAnak = document.getElementById("btn-tambah-anak");
+
+  function renderAnakList() {
+    emptyHint.style.display = anakKelompok.length ? "none" : "block";
+
+    const max = TIPE_SESI_MAX_ANAK[tipe];
+    const capped = max && anakKelompok.length >= max;
+    maxHint.textContent = max
+      ? (capped ? `Sudah mencapai batas ${max} anak untuk sesi ${TIPE_SESI_LABEL[tipe]}.` : `Maks ${max} anak untuk sesi ${TIPE_SESI_LABEL[tipe]} (${anakKelompok.length}/${max}).`)
+      : "";
+    if (max) maxHint.style.display = "block";
+    btnTambahAnak.disabled = capped;
+    selectKelompok.disabled = capped;
+
+    anakListEl.innerHTML = anakKelompok.map((a, i) => {
+      const hadir = a.hadir !== false;
+      return `
+      <div class="anak-row" data-idx="${i}">
+        <div class="anak-row-head">
+          <div>
+            <strong>${a.nama}</strong>
+            <span>Orang tua: ${a.orangTua?.nama || "—"} · WA: ${a.orangTua?.noWa || "—"}</span>
+          </div>
+          <button type="button" class="remove-anak" data-idx="${i}">✕ Hapus</button>
+        </div>
+        <div class="hadir-toggle">
+          <button type="button" class="hadir-btn ${hadir ? "active" : ""}" data-hadir="true" data-idx="${i}">✓ Hadir</button>
+          <button type="button" class="hadir-btn tidak-hadir ${!hadir ? "active" : ""}" data-hadir="false" data-idx="${i}">✕ Tidak Hadir</button>
+        </div>
+        ${hadir ? `
+        <div class="rt-toolbar" data-rt-toolbar-idx="${i}">
+          <button type="button" class="rt-btn" data-wrap="*" title="Tebal">B</button>
+          <button type="button" class="rt-btn rt-italic" data-wrap="_" title="Miring">I</button>
+          <button type="button" class="rt-btn" data-bullet="1" title="Bullet list">• List</button>
+        </div>
+        <textarea rows="2" placeholder="Catatan khusus untuk ${a.nama} (opsional)..." data-idx="${i}">${a.catatanKhusus || ""}</textarea>
+        ` : `
+        <p class="tidak-hadir-hint">Anak ini ditandai tidak hadir — tidak perlu catatan khusus atau PDF untuk sesi ini.</p>
+        `}
+      </div>
+    `;
+    }).join("");
+
+    anakListEl.querySelectorAll(".remove-anak").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        anakKelompok.splice(Number(btn.dataset.idx), 1);
+        renderAnakList();
+        fillSelect(selectKelompok, anakKelompok.map((a) => a.id));
+      });
+    });
+    anakListEl.querySelectorAll(".hadir-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.dataset.idx);
+        anakKelompok[idx].hadir = btn.dataset.hadir === "true";
+        renderAnakList();
+      });
+    });
+    anakListEl.querySelectorAll("textarea").forEach((ta) => {
+      ta.addEventListener("input", () => {
+        anakKelompok[Number(ta.dataset.idx)].catatanKhusus = ta.value;
+      });
+      const toolbar = anakListEl.querySelector(`[data-rt-toolbar-idx="${ta.dataset.idx}"]`);
+      attachRichTextToolbar(toolbar, ta);
+    });
+  }
+  renderAnakList();
+
+  document.getElementById("btn-tambah-anak").addEventListener("click", () => {
+    const anak = anakOptions.find((a) => a.id === selectKelompok.value);
+    if (!anak) return;
+    anakKelompok.push({ ...anak, catatanKhusus: "", hadir: true });
+    fillSelect(selectKelompok, anakKelompok.map((a) => a.id));
+    renderAnakList();
+  });
+
+  let fotoLinks = [""];
+  let fotoPreviewTokens = {};
+  const fotoLinkList = document.getElementById("foto-link-list");
+
+  function renderFotoLinks() {
+    fotoLinkList.innerHTML = fotoLinks.map((url, i) => `
+      <div class="foto-link-row">
+        <div class="foto-link-preview" id="foto-link-preview-${i}"><span>Belum ada gambar</span></div>
+        <div class="foto-link-fields">
+          <input type="text" class="foto-link-input" data-idx="${i}" value="${url}" placeholder="https://i.ibb.co/xxxxx/nama-file.jpg" />
+          <p class="upload-progress" id="foto-link-progress-${i}"></p>
+        </div>
+        <button type="button" class="foto-link-remove" data-idx="${i}" ${fotoLinks.length <= 1 ? "hidden" : ""}>✕</button>
+      </div>
+    `).join("");
+
+    fotoLinkList.querySelectorAll(".foto-link-input").forEach((input) => {
+      const idx = Number(input.dataset.idx);
+      input.addEventListener("blur", () => {
+        fotoLinks[idx] = input.value.trim();
+        previewFotoLink(idx, fotoLinks[idx]);
+      });
+      if (input.value.trim()) previewFotoLink(idx, input.value.trim());
+    });
+
+    fotoLinkList.querySelectorAll(".foto-link-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        fotoLinks.splice(Number(btn.dataset.idx), 1);
+        if (!fotoLinks.length) fotoLinks = [""];
+        renderFotoLinks();
+      });
+    });
+  }
+
+  function previewFotoLink(idx, url) {
+    const previewEl = document.getElementById(`foto-link-preview-${idx}`);
+    const progressEl = document.getElementById(`foto-link-progress-${idx}`);
+    if (!previewEl || !progressEl) return;
+    const myToken = (fotoPreviewTokens[idx] = (fotoPreviewTokens[idx] || 0) + 1);
+
+    if (!url) {
+      previewEl.innerHTML = "<span>Belum ada gambar</span>";
+      progressEl.textContent = "";
+      progressEl.classList.remove("err-text");
+      return;
+    }
+    progressEl.textContent = "Memuat preview...";
+    progressEl.classList.remove("err-text");
+    const img = new Image();
+    img.onload = () => {
+      if (fotoPreviewTokens[idx] !== myToken) return;
+      previewEl.innerHTML = `<img src="${url}" alt="Preview dokumentasi" />`;
+      progressEl.textContent = "Gambar berhasil dimuat ✓";
+      progressEl.classList.remove("err-text");
+    };
+    img.onerror = () => {
+      if (fotoPreviewTokens[idx] !== myToken) return;
+      previewEl.innerHTML = "<span>Link gambar tidak bisa dimuat</span>";
+      progressEl.textContent = "Gagal memuat gambar. Pastikan linknya itu bagian src dari kode \"HTML full linked\" (biasanya diakhiri .jpg/.png/.gif), lalu coba lagi.";
+      progressEl.classList.add("err-text");
+    };
+    img.src = url;
+  }
+
+  document.getElementById("btn-tambah-foto").addEventListener("click", () => {
+    fotoLinks.push("");
+    renderFotoLinks();
+  });
+
+  renderFotoLinks();
+
+  if (editId && editingReport) {
+    const editDate = editingReport.tanggal?.toDate ? editingReport.tanggal.toDate() : new Date(editingReport.tanggal);
+    if (!isNaN(editDate.getTime())) document.getElementById("f-tanggal").valueAsDate = editDate;
+
+    document.getElementById("f-laporan").value = editingReport.laporanUmum || "";
+
+    fotoLinks = (editingReport.fotoUrls || []).length ? [...editingReport.fotoUrls] : [""];
+    renderFotoLinks();
+
+    const existingAnak = editingReport.anakList || [];
+    if (isTipeMultiAnak(tipe)) {
+      anakKelompok = existingAnak.map((a) => ({
+        id: a.anakId,
+        nama: a.nama,
+        orangTua: { nama: a.orangTuaNama, noWa: a.orangTuaNoWa },
+        catatanKhusus: a.catatanKhusus || "",
+        hadir: a.hadir !== false,
+      }));
+      fillSelect(selectKelompok, anakKelompok.map((a) => a.id));
+      renderAnakList();
+    } else if (existingAnak.length) {
+      const a = existingAnak[0];
+      anakPrivate = { id: a.anakId, nama: a.nama, orangTua: { nama: a.orangTuaNama, noWa: a.orangTuaNoWa } };
+      if ([...selectPrivate.options].some((o) => o.value === a.anakId)) selectPrivate.value = a.anakId;
+      document.getElementById("anak-single-nama").textContent = a.nama;
+      document.getElementById("anak-single-ortu").textContent = `Orang tua: ${a.orangTuaNama || "—"} · WA: ${a.orangTuaNoWa || "—"}`;
+      document.getElementById("anak-single-card").classList.add("show");
+    }
+  }
+
+  const form = document.getElementById("form-laporan");
+  const msg = document.getElementById("form-msg");
+  const btnSubmit = document.getElementById("btn-submit");
+  let lastSavedContext = null;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+    msg.className = "form-msg";
+
+    const tanggalStr = document.getElementById("f-tanggal").value;
+    const laporanUmum = document.getElementById("f-laporan").value.trim();
+
+    let anakListFinal = [];
+    if (tipe === "private") {
+      if (!anakPrivate) { msg.textContent = "Pilih anak dulu ya."; msg.classList.add("err"); return; }
+      anakListFinal = [{
+        anakId: anakPrivate.id,
+        nama: anakPrivate.nama,
+        orangTuaNama: anakPrivate.orangTua?.nama || "",
+        orangTuaNoWa: anakPrivate.orangTua?.noWa || "",
+        catatanKhusus: "",
+        hadir: true,
+      }];
+    } else {
+      if (!anakKelompok.length) { msg.textContent = "Tambahkan minimal 1 anak ke sesi kelompok."; msg.classList.add("err"); return; }
+      anakListFinal = anakKelompok.map((a) => ({
+        anakId: a.id,
+        nama: a.nama,
+        orangTuaNama: a.orangTua?.nama || "",
+        orangTuaNoWa: a.orangTua?.noWa || "",
+        catatanKhusus: a.hadir === false ? "" : (a.catatanKhusus || "").trim(),
+        hadir: a.hadir !== false,
+      }));
+    }
+
+    if (!tanggalStr) { msg.textContent = "Pilih tanggal sesi dulu ya."; msg.classList.add("err"); return; }
+    if (!laporanUmum) { msg.textContent = "Isi laporan sesi dulu ya."; msg.classList.add("err"); return; }
+
+    const tanggalJamStr = `${tanggalStr}T00:00:00`;
+
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = "Menyimpan...";
+    try {
+      const fotoUrls = fotoLinks.map((u) => u.trim()).filter(Boolean);
+
+      if (editId) {
+        await updateLaporan(editId, {
+          tipe,
+          tanggal: tanggalJamStr,
+          laporanUmum,
+          anakList: anakListFinal,
+          fotoUrls,
+        });
+      } else {
+        await createLaporan({
+          pelatihUid: me.uid,
+          pelatihNama: me.name || me.email,
+          programId,
+          programTitle,
+          subProgram: sub,
+          tipe,
+          tanggal: tanggalJamStr,
+          laporanUmum,
+          anakList: anakListFinal,
+          fotoUrls,
+        });
+      }
+
+      lastSavedContext = {
+        tanggal: new Date(tanggalJamStr),
+        laporanUmum,
+        anakList: anakListFinal,
+        fotoUrls,
+        pelatihNama: me.name || me.email,
+      };
+      showSuccess(lastSavedContext);
+    } catch (err) {
+      console.error(err);
+      msg.textContent = "Gagal menyimpan: " + err.message;
+      msg.classList.add("err");
+    } finally {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = editId ? "Simpan Perubahan" : "Simpan Laporan";
+    }
+  });
+
+  function showSuccess(ctx) {
+    document.getElementById("form-card").style.display = "none";
+    const panel = document.getElementById("success-panel");
+    panel.classList.add("show");
+    const heading = panel.querySelector("h3");
+    const desc = panel.querySelector(".card-sub");
+    if (editId) {
+      if (heading) heading.textContent = "Perubahan berhasil disimpan!";
+      if (desc) desc.textContent = "Kalau ada perubahan yang perlu diketahui orang tua, download PDF terbarunya dulu di bawah, baru kirim ke orang tua.";
+    }
+
+    const reportForPdf = {
+      programId,
+      programTitle,
+      subProgram: sub,
+      tipe,
+      tanggal: ctx.tanggal,
+      pelatihNama: ctx.pelatihNama,
+      laporanUmum: ctx.laporanUmum,
+      fotoUrls: ctx.fotoUrls,
+    };
+
+    const listEl = document.getElementById("kirim-wa-list");
+    listEl.innerHTML = ctx.anakList.map((a, i) => {
+      if (isTipeMultiAnak(tipe) && !isAnakHadir(a)) {
+        return `
+          <div class="kirim-row-wrap">
+            <div class="kirim-row">
+              <div>
+                <strong>${a.nama}</strong><span class="anak-tag-tidak-hadir">✕ Tidak Hadir</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      const disabled = !a.orangTuaNoWa;
+      const waMessage = buildLaporanMessage({
+        orangTuaNama: a.orangTuaNama,
+        anakNama: a.nama,
+        programTitle,
+        subProgram: sub,
+        tanggal: ctx.tanggal,
+        tipe: reportForPdf.tipe,
+        laporanUmum: ctx.laporanUmum,
+        catatanKhusus: a.catatanKhusus,
+      });
+      const hadirTag = isTipeMultiAnak(tipe) ? `<span class="anak-tag-hadir">✓ Hadir</span>` : "";
+      return `
+        <div class="kirim-row-wrap">
+          <div class="kirim-row">
+            <div>
+              <strong>${a.nama}</strong>${hadirTag}
+              <span>Orang tua: ${a.orangTuaNama || "—"} ${a.orangTuaNoWa ? "· " + a.orangTuaNoWa : "· nomor WA tidak ada"}</span>
+            </div>
+            <div class="kirim-row-actions">
+              <button type="button" class="kirim-pdf-btn" data-idx="${i}">Download PDF</button>
+              <button type="button" class="kirim-wa-btn" data-idx="${i}" ${disabled ? "disabled title='Nomor WA orang tua tidak ada'" : ""}>
+                Kirim ke Orang Tua
+              </button>
+            </div>
+          </div>
+          <div class="copy-text-panel">
+            <div class="copy-text-head">
+              <span>Isi Laporan</span>
+              <button type="button" class="copy-text-btn" data-idx="${i}">📋 Salin</button>
+            </div>
+            <pre class="copy-text-body" id="copy-text-body-${i}">${escapeHtml(waMessage)}</pre>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    listEl.querySelectorAll(".kirim-pdf-btn").forEach((btn) => {
+      btn.addEventListener("click", () => downloadPdfLaporan(ctx.anakList[Number(btn.dataset.idx)], reportForPdf, btn));
+    });
+
+    listEl.querySelectorAll(".kirim-wa-btn").forEach((btn) => {
+      if (btn.disabled) return;
+      btn.addEventListener("click", () => kirimKeOrtu(ctx.anakList[Number(btn.dataset.idx)], reportForPdf, btn));
+    });
+
+    listEl.querySelectorAll(".copy-text-btn").forEach((btn) => {
+      btn.addEventListener("click", () => copyLaporanText(Number(btn.dataset.idx), btn));
+    });
+  }
+
+  function escapeHtml(str) {
+    return (str || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  async function copyLaporanText(idx, btn) {
+    const bodyEl = document.getElementById(`copy-text-body-${idx}`);
+    if (!bodyEl) return;
+    const originalLabel = btn.textContent;
+    try {
+      await navigator.clipboard.writeText(bodyEl.textContent);
+      btn.textContent = "✓ Tersalin";
+    } catch (err) {
+      console.error(err);
+      btn.textContent = "Gagal, salin manual";
+    } finally {
+      setTimeout(() => { btn.textContent = originalLabel; }, 1800);
+    }
+  }
+
+  async function downloadPdfLaporan(anakEntry, reportForPdf, btn) {
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Menyiapkan...";
+    try {
+      const pdfDoc = await buildLaporanPdf(reportForPdf, anakEntry);
+      pdfDoc.save(laporanPdfFilename(reportForPdf, anakEntry));
+    } catch (err) {
+      console.error(err);
+      alert("Gagal membuat PDF: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  }
+
+  async function kirimKeOrtu(anakEntry, reportForPdf, btn) {
+    if (!anakEntry.orangTuaNoWa) return;
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Menyiapkan PDF...";
+
+    const waTab = window.open("", "_blank");
+    try {
+      const pdfDoc = await buildLaporanPdf(reportForPdf, anakEntry);
+      pdfDoc.save(laporanPdfFilename(reportForPdf, anakEntry));
+
+      btn.textContent = "Membuka WhatsApp...";
+      const message = buildLaporanMessage({
+        orangTuaNama: anakEntry.orangTuaNama,
+        anakNama: anakEntry.nama,
+        programTitle,
+        subProgram: sub,
+        tanggal: reportForPdf.tanggal,
+        tipe: reportForPdf.tipe,
+        laporanUmum: reportForPdf.laporanUmum,
+        catatanKhusus: anakEntry.catatanKhusus,
+      });
+      const link = buildWaLink(anakEntry.orangTuaNoWa, message);
+      if (waTab) waTab.location.href = link;
+      else window.open(link, "_blank");
+    } catch (err) {
+      console.error(err);
+      if (waTab) waTab.close();
+      alert("Gagal membuat PDF: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  }
+
+  const btnLaporanBaru = document.getElementById("btn-laporan-baru");
+  if (editId) {
+    btnLaporanBaru.textContent = "Kembali ke Riwayat";
+    btnLaporanBaru.addEventListener("click", () => {
+      window.location.href = "/pelatih-riwayat";
+    });
+  } else {
+    btnLaporanBaru.addEventListener("click", () => {
+      window.location.reload();
+    });
+  }
+</script>
+</body>
+</html>

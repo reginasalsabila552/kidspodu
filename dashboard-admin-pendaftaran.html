@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+<title>Pendaftaran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  body {
+    background: radial-gradient(circle at 8% 12%, #efeafe 0%, transparent 42%),
+                radial-gradient(circle at 95% 85%, #dff6f0 0%, transparent 45%),
+                linear-gradient(160deg, #f3f1fd 0%, #eef4fc 55%, #eaf5fd 100%);
+    min-height: 100vh;
+    padding: 26px;
+  }
+
+  .app-shell {
+    max-width: 1520px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+    display: flex;
+    overflow: hidden;
+    min-height: calc(100vh - 52px);
+  }
+
+  .sidebar {
+    width: 260px;
+    flex: none;
+    background: var(--purple-900);
+    color: #fff;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar .brand { display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 40px; padding: 0 8px; }
+  .sidebar .brand-mark { width: 76px; height: 76px; object-fit: contain; flex: none; }
+
+  .nav-group { display: flex; flex-direction: column; gap: 6px; }
+  .sidebar nav a, .sidebar nav button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; color: rgba(255,255,255,.68); font-family: inherit; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s;
+    background: transparent; border: none;
+  }
+  .sidebar nav a:hover, .sidebar nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar nav a.active { background: #fff; color: var(--purple-700); font-weight: 700; box-shadow: 0 8px 18px rgba(28,15,64,.18); }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .nav-bottom { border-top: 1px solid rgba(255,255,255,.12); padding-top: 16px; margin-top: 16px; }
+  .sidebar .nav-bottom button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .15s, color .15s;
+    background: transparent; border: none; color: #ffb9a8;
+  }
+  .sidebar .nav-bottom button:hover { background: rgba(224,86,58,.18); color: #fff; }
+
+  .sidebar-toggle {
+    display: none; flex: none; width: 40px; height: 40px; align-items: center; justify-content: center;
+    background: #fff; border: 1.5px solid #f0eefb; border-radius: 12px; font-size: 19px; color: var(--purple-700);
+    cursor: pointer; box-shadow: var(--shadow-card);
+  }
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(20, 12, 40, .45); z-index: 999;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .main-content { flex: 1; padding: 32px 34px; min-width: 0; }
+  .main-topbar h1 { font-size: 23px; color: var(--ink); }
+  .main-topbar .sub { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+
+  .tabs { display: flex; gap: 8px; margin: 24px 0 20px; }
+  .tabs button { padding: 9px 18px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 600; color: var(--ink-soft); background: #fff; box-shadow: var(--shadow-card); }
+  .tabs button.active { background: var(--purple-600); color: #fff; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card { background: #fff; border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 24px; margin-bottom: 20px; }
+  .card h3 { font-size: 16px; margin-bottom: 4px; }
+  .card .card-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .field { margin-bottom: 2px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field input, .field textarea {
+    width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid #ddd9f7;
+    font-family: inherit; font-size: 14px; background: var(--sky);
+  }
+  .field .hint { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+  .password-input-wrap { position: relative; }
+  .password-input-wrap input { padding-right: 42px; }
+  .password-toggle-btn {
+    position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-radius: 8px; color: var(--ink-soft); cursor: pointer;
+  }
+  .password-toggle-btn:hover { color: var(--purple-600); background: var(--purple-100); }
+  .password-toggle-btn svg { width: 18px; height: 18px; }
+  .password-toggle-btn .ic-eye-off { display: none; }
+  .password-toggle-btn.is-revealed .ic-eye { display: none; }
+  .password-toggle-btn.is-revealed .ic-eye-off { display: block; }
+
+  .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+  .checkbox-group label {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
+    background: var(--sky); border: 1.5px solid #ddd9f7; border-radius: var(--radius-pill);
+    padding: 8px 14px; cursor: pointer;
+  }
+  .checkbox-group input { width: auto; accent-color: var(--purple-600); }
+  .program-groups { display: flex; flex-direction: column; gap: 16px; }
+  .program-group { width: 100%; padding-bottom: 14px; border-bottom: 1px solid #f0eefb; }
+  .program-group:last-child { border-bottom: none; padding-bottom: 0; }
+  .program-group-title { font-size: 12px; font-weight: 700; color: var(--purple-700); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 8px; }
+
+  .form-actions { margin-top: 20px; display: flex; align-items: center; gap: 14px; }
+  .form-msg { font-size: 13px; font-weight: 600; }
+  .form-msg.ok { color: var(--teal-700); }
+  .form-msg.err { color: var(--coral-600); }
+
+  .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+  th { color: var(--ink-soft); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+  .tag { display: inline-block; background: var(--purple-100); color: var(--purple-700); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: var(--radius-pill); margin: 2px 3px 2px 0; }
+  .empty-row td { text-align: center; color: var(--ink-soft); padding: 24px; }
+  .btn-pdf {
+    background: var(--purple-100); color: var(--purple-700); font-size: 12px; font-weight: 600;
+    padding: 6px 12px; border-radius: var(--radius-pill); white-space: nowrap;
+  }
+  .btn-pdf:hover { background: var(--purple-600); color: #fff; }
+  .btn-hapus {
+    background: var(--coral-100); color: var(--coral-600); font-size: 12px; font-weight: 600;
+    padding: 6px 12px; border-radius: var(--radius-pill); white-space: nowrap; margin-left: 6px;
+  }
+  .btn-hapus:hover { background: var(--coral-600); color: #fff; }
+  .pending-email-badge { display: inline-block; font-size: 10.5px; font-weight: 600; color: var(--yellow-700, #a16207); margin-top: 3px; }
+  .status-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .02em; }
+  .status-pill.aktif { background: var(--teal-100, #ccfbf1); color: var(--teal-700, #0f766e); }
+  .status-pill.nonaktif { background: #f1f1f1; color: #6b6b6b; }
+  .status-pill.menunggu_verifikasi { background: var(--yellow-100, #fef9c3); color: var(--yellow-700, #a16207); }
+  .btn-resend { background: none; border: none; padding: 0; color: var(--purple-600); font-weight: 600; font-size: 11.5px; text-decoration: underline; cursor: pointer; display: block; margin-top: 4px; }
+  .btn-resend:disabled { color: var(--ink-soft); cursor: default; text-decoration: none; }
+
+  .card-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .btn-refresh {
+    display: inline-flex; align-items: center; gap: 6px; flex: none; white-space: nowrap;
+    background: var(--purple-100); color: var(--purple-700); font-size: 12.5px; font-weight: 700;
+    padding: 8px 14px; border-radius: var(--radius-pill); border: none; cursor: pointer;
+  }
+  .btn-refresh:hover { background: var(--purple-600); color: #fff; }
+  .btn-refresh:disabled { opacity: .6; cursor: default; }
+  .btn-refresh-icon { display: inline-block; transition: transform .5s ease; }
+  .btn-refresh.is-spinning .btn-refresh-icon { animation: btn-refresh-spin .6s linear infinite; }
+  @keyframes btn-refresh-spin { to { transform: rotate(360deg); } }
+
+  .btn-edit {
+    background: var(--purple-100); color: var(--purple-700); font-size: 12px; font-weight: 600;
+    padding: 6px 12px; border-radius: var(--radius-pill); white-space: nowrap; margin-left: 6px;
+  }
+  .btn-edit:hover { background: var(--purple-600); color: #fff; }
+  .aksi-cell { display: flex; gap: 0; flex-wrap: wrap; }
+
+  .foto-upload-row { display: flex; align-items: center; gap: 14px; }
+  .foto-preview {
+    width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none;
+    background: var(--sky); border: 1.5px solid #ddd9f7;
+  }
+  .foto-preview.is-empty { display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--ink-soft); }
+  .foto-upload-btn {
+    font-size: 12.5px; font-weight: 700; color: var(--purple-700); background: var(--purple-100);
+    padding: 8px 14px; border-radius: var(--radius-pill); cursor: pointer; display: inline-block; white-space: nowrap;
+  }
+  .foto-upload-btn:hover { background: var(--purple-200, #ddd9f7); }
+  .foto-upload-status { font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
+  .foto-upload-status.err { color: var(--coral-600); }
+  .foto-upload-status.ok { color: var(--teal-700); }
+
+  .table-avatar {
+    width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: var(--purple-100);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--purple-700);
+    vertical-align: middle;
+  }
+
+  @media (max-width: 1080px) {
+    body { padding: 0; }
+    .app-shell { border-radius: 0; min-height: 100vh; }
+    .sidebar-toggle { display: flex; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 260px; max-width: 80vw;
+      transform: translateX(-100%); transition: transform .25s ease; z-index: 1000; box-shadow: 0 0 0 transparent;
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 12px 0 32px rgba(20,12,40,.25); }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a href="/dashboard-admin" class="brand"><img src="assets/images/logo.png" alt="KidsPodu" class="brand-mark"></a>
+
+    <nav class="nav-group">
+      <a href="/dashboard-admin">Dashboard</a>
+      <a href="/dashboard-admin-pendaftaran" class="active">Pendaftaran</a>
+      <a href="/dashboard-admin-laporan">Laporan</a>
+      <a href="/dashboard-admin-absensi">Absensi</a>
+      <a href="/dashboard-admin-artikel">Artikel</a>
+      <a href="/dashboard-admin-testimoni">Testimoni</a>
+      <a href="/dashboard-admin-team">Tim</a>
+      <a href="/dashboard-admin-sosmed">Sosmed</a>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="nav-bottom">
+      <button type="button" id="logout-btn">Keluar</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main-content">
+    <div class="main-topbar">
+      <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Buka menu">☰</button>
+      <div>
+        <h1>Pendaftaran</h1>
+        <p class="sub" id="who-am-i">Memuat...</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="anak">Daftar Anak</button>
+      <button class="tab-btn" data-tab="pelatih">Daftar Pelatih</button>
+    </div>
+
+    <div class="panel active" id="panel-anak">
+      <div class="card">
+        <h3>Registrasi Anak Baru</h3>
+        <p class="card-sub">Data ini dipakai untuk dropdown nama anak di portal pelatih, dan nomor WA orang tua untuk kirim laporan.</p>
+
+        <form id="form-anak">
+          <div class="form-grid">
+            <div class="field">
+              <label>Nama Anak</label>
+              <input type="text" id="f-nama" required placeholder="Nama lengkap anak" />
+            </div>
+            <div class="field">
+              <label>Tanggal Lahir</label>
+              <input type="date" id="f-tgl-lahir" required />
+            </div>
+
+            <div class="field full">
+              <label>Program yang Diikuti</label>
+              <div class="program-groups" id="f-program"></div>
+            </div>
+
+            <div class="field">
+              <label>Nama Orang Tua / Wali</label>
+              <input type="text" id="f-ortu-nama" required placeholder="Nama orang tua" />
+            </div>
+            <div class="field">
+              <label>No. WhatsApp Orang Tua</label>
+              <input type="text" id="f-ortu-wa" required placeholder="08xxxxxxxxxx" />
+              <p class="hint">Boleh format 08xx atau +62xx, otomatis dirapikan.</p>
+            </div>
+
+            <div class="field full">
+              <label>Alamat</label>
+              <textarea id="f-ortu-alamat" rows="2" required placeholder="Alamat rumah"></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit" id="btn-submit-anak">Simpan Data Anak</button>
+            <span class="form-msg" id="msg-anak"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header-row">
+          <div>
+            <h3>Anak Terdaftar</h3>
+            <p class="card-sub">Daftar semua anak yang sudah diregistrasi.</p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn-refresh" id="btn-refresh-anak" title="Muat ulang daftar anak">
+              <span class="btn-refresh-icon">⟳</span> Refresh
+            </button>
+            <button type="button" class="btn-refresh" id="btn-sync-total-anak" title="Hitung ulang jumlah anak & update angka di homepage">
+              <span class="btn-refresh-icon">⟳</span> Sinkronkan Jumlah ke Homepage
+            </button>
+          </div>
+        </div>
+        <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>No</th><th>Nama</th><th>Program</th><th>Orang Tua</th><th>No. WA</th><th>Status</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="anak-table-body">
+            <tr class="empty-row"><td colspan="7">Memuat data...</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-pelatih">
+      <div class="card">
+        <h3>Registrasi Pelatih Baru</h3>
+        <p class="card-sub">Password dibuat langsung oleh admin di sini. Akun pelatih langsung aktif & bisa langsung dipakai login, tanpa perlu verifikasi email.</p>
+
+        <form id="form-pelatih">
+          <div class="form-grid">
+            <div class="field">
+              <label>Nama Pelatih</label>
+              <input type="text" id="p-nama" required placeholder="Nama lengkap pelatih" />
+            </div>
+            <div class="field">
+              <label>No. Kontak (HP/WA)</label>
+              <input type="text" id="p-kontak" required placeholder="08xxxxxxxxxx" />
+            </div>
+
+            <div class="field full">
+              <label>Email</label>
+              <input type="email" id="p-email" required placeholder="email@contoh.com" />
+            </div>
+
+            <div class="field full">
+              <label>Password Login Pelatih</label>
+              <div class="password-input-wrap">
+                <input type="password" id="p-password" required minlength="6" placeholder="Minimal 6 karakter" />
+                <button type="button" class="password-toggle-btn" id="p-password-toggle" aria-label="Tampilkan password" title="Tampilkan password">
+                  <svg class="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="ic-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a17.86 17.86 0 0 1-2.44 3.66"/><path d="M6.61 6.61A17.83 17.83 0 0 0 1 13s4 8 11 8a9.7 9.7 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                </button>
+              </div>
+              <p class="foto-upload-status">Catat/kirim password ini ke pelatihnya secara manual (mis. lewat WA) — sistem tidak mengirim email apa pun.</p>
+            </div>
+
+            <div class="field full">
+              <label>Alamat</label>
+              <textarea id="p-alamat" rows="2" required placeholder="Alamat tempat tinggal pelatih"></textarea>
+            </div>
+
+            <div class="field full">
+              <label>Foto Pelatih</label>
+              <div class="foto-upload-row">
+                <div class="foto-preview is-empty" id="p-foto-preview">🧑</div>
+                <div style="flex:1; min-width:0;">
+                  <input type="text" id="p-foto-link" placeholder="https://i.ibb.co/xxxxx/nama-file.jpg" style="width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid #ddd9f7; font-family:inherit; font-size:13px; background:var(--sky);" />
+                  <p class="foto-upload-status" id="p-foto-status">
+                    Opsional. Cara dapetin link: buka <strong>imgbb.com</strong> (tanpa akun) → upload foto →
+                    pilih <strong>"Don't autodelete"</strong> → di kolom Embed codes pilih
+                    <strong>"HTML full linked"</strong> → salin (copy) cuma bagian di dalam
+                    <strong>src="..."</strong> → tempel di sini.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit" id="btn-submit-pelatih">Simpan Data Pelatih</button>
+            <span class="form-msg" id="msg-pelatih"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header-row">
+          <div>
+            <h3>Pelatih Terdaftar</h3>
+            <p class="card-sub">Daftar semua akun pelatih yang sudah dibuat.</p>
+          </div>
+          <button type="button" class="btn-refresh" id="btn-refresh-pelatih" title="Muat ulang daftar pelatih">
+            <span class="btn-refresh-icon">⟳</span> Refresh
+          </button>
+        </div>
+        <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>No</th><th>Foto</th><th>Nama</th><th>Email</th><th>No. Kontak</th><th>Alamat</th><th>Status</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="pelatih-table-body">
+            <tr class="empty-row"><td colspan="8">Memuat data...</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+
+  </main>
+</div>
+
+<script type="module">
+  import { guardDashboard, wireLogout } from "./js/auth-guard.js";
+  import { getPrograms } from "./js/data.js";
+  import { addAnak, listAnak, deleteAnak, recalcTotalAnak } from "./js/anak-service.js";
+  import { openAnakEditModal } from "./js/anak-edit-modal.js";
+  import { addPelatih, listPelatih, deletePelatih, resendPelatihVerification } from "./js/pelatih-service.js";
+  import { buildBiodataAnakPdf, biodataPdfFilename } from "./js/report-pdf.js";
+
+  guardDashboard("admin", (userData) => {
+    document.getElementById("who-am-i").textContent =
+      `Masuk sebagai ${userData.name || userData.email} · Admin`;
+  });
+
+  wireLogout("#logout-btn");
+
+  const sidebarEl = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  function openSidebar() { sidebarEl.classList.add("open"); sidebarOverlay.classList.add("open"); }
+  function closeSidebar() { sidebarEl.classList.remove("open"); sidebarOverlay.classList.remove("open"); }
+  sidebarToggle.addEventListener("click", () => {
+    sidebarEl.classList.contains("open") ? closeSidebar() : openSidebar();
+  });
+  sidebarOverlay.addEventListener("click", closeSidebar);
+  sidebarEl.querySelectorAll("a, button").forEach((el) => el.addEventListener("click", closeSidebar));
+
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add("active");
+    });
+  });
+
+  const programWrap = document.getElementById("f-program");
+  let programs = [];
+  (async () => {
+    try {
+      programs = await getPrograms();
+      programWrap.innerHTML = programs.map((p) => `
+        <div class="program-group">
+          <div class="program-group-title">${p.title}</div>
+          <div class="checkbox-group">
+            ${(p.items || []).map((item) => `
+              <label>
+                <input type="checkbox" name="program" value="${p.id}::${item}" />
+                ${item}
+              </label>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+    } catch (err) {
+      console.error(err);
+      programWrap.innerHTML = `<p style="color:var(--coral-600); font-size:13px;">Gagal memuat daftar program: ${err.message}</p>`;
+    }
+  })();
+
+  function programLabel(sel) {
+    if (!sel) return "Program tidak diketahui";
+    const p = programs.find((x) => x.id === sel.programId);
+    const catTitle = p ? p.title : (sel.programId || "Program tidak diketahui");
+    const sub = sel.subProgram || "";
+    return sub ? `${catTitle} – ${sub}` : catTitle;
+  }
+
+  let currentAnakData = [];
+
+  async function renderAnakTable() {
+    const tbody = document.getElementById("anak-table-body");
+    try {
+      currentAnakData = await listAnak();
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="7" style="color:var(--coral-600);">Gagal memuat data anak: ${err.message}</td></tr>`;
+      return;
+    }
+    if (!currentAnakData.length) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Belum ada anak yang terdaftar.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = currentAnakData.map((a, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${a.nama}</td>
+        <td>${(a.program || []).map((sel) => `<span class="tag">${programLabel(sel)}</span>`).join("")}</td>
+        <td>${a.orangTua?.nama || "—"}</td>
+        <td>${a.orangTua?.noWa || "—"}</td>
+        <td>${a.status || "aktif"}</td>
+        <td class="aksi-cell">
+          <button class="btn-pdf" data-id="${a.id}" type="button">📄 Unduh PDF</button>
+          <button class="btn-edit" data-id="${a.id}" type="button">✏️ Edit</button>
+          <button class="btn-hapus" data-id="${a.id}" data-nama="${a.nama}" type="button">🗑️ Hapus</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+  renderAnakTable();
+
+  const btnRefreshAnak = document.getElementById("btn-refresh-anak");
+  btnRefreshAnak.addEventListener("click", async () => {
+    btnRefreshAnak.disabled = true;
+    btnRefreshAnak.classList.add("is-spinning");
+    try {
+      await renderAnakTable();
+    } finally {
+      btnRefreshAnak.disabled = false;
+      btnRefreshAnak.classList.remove("is-spinning");
+    }
+  });
+
+  const btnSyncTotalAnak = document.getElementById("btn-sync-total-anak");
+  btnSyncTotalAnak.addEventListener("click", async () => {
+    btnSyncTotalAnak.disabled = true;
+    btnSyncTotalAnak.classList.add("is-spinning");
+    try {
+      const total = await recalcTotalAnak();
+      alert(`Berhasil disinkronkan. Jumlah anak terdaftar: ${total}. Cek homepage untuk lihat counter-nya.`);
+    } catch (err) {
+      alert(`Gagal sinkronkan jumlah: ${err.message}`);
+    } finally {
+      btnSyncTotalAnak.disabled = false;
+      btnSyncTotalAnak.classList.remove("is-spinning");
+    }
+  });
+
+  document.getElementById("anak-table-body").addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-hapus");
+    if (!btn) return;
+    const { id, nama } = btn.dataset;
+    if (!confirm(`Yakin mau hapus data "${nama}"? Laporan sesi yang sudah pernah dibuat untuk anak ini tetap tersimpan sebagai arsip, tapi anak ini akan hilang dari dropdown pelatih dan daftar aktif.`)) return;
+
+    btn.disabled = true;
+    btn.textContent = "Menghapus...";
+    try {
+      await deleteAnak(id);
+      await renderAnakTable();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menghapus: " + err.message);
+      btn.disabled = false;
+      btn.textContent = "🗑️ Hapus";
+    }
+  });
+
+  document.getElementById("anak-table-body").addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-edit");
+    if (!btn) return;
+    const anak = currentAnakData.find((a) => a.id === btn.dataset.id);
+    if (!anak) return;
+    openAnakEditModal(anak, programs, () => renderAnakTable());
+  });
+
+  async function downloadAnakPdf(anak, btn) {
+    const originalLabel = btn ? btn.textContent : null;
+    if (btn) { btn.disabled = true; btn.textContent = "Menyiapkan..."; }
+    try {
+      const pdfDoc = await buildBiodataAnakPdf(anak, programLabel);
+      pdfDoc.save(biodataPdfFilename(anak));
+    } catch (err) {
+      console.error(err);
+      alert("Gagal membuat PDF: " + err.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+    }
+  }
+
+  document.getElementById("anak-table-body").addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-pdf");
+    if (!btn) return;
+    const anak = currentAnakData.find((a) => a.id === btn.dataset.id);
+    if (anak) downloadAnakPdf(anak, btn);
+  });
+
+
+  async function renderPelatihTable() {
+    const tbody = document.getElementById("pelatih-table-body");
+    let data;
+    try {
+      data = await listPelatih();
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="8" style="color:var(--coral-600);">Gagal memuat data pelatih: ${err.message}</td></tr>`;
+      return;
+    }
+    if (!data.length) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="8">Belum ada pelatih yang terdaftar.</td></tr>`;
+      return;
+    }
+    const statusLabel = {
+      aktif: "Aktif",
+      nonaktif: "Nonaktif",
+      menunggu_verifikasi: "Menunggu Verifikasi",
+    };
+    tbody.innerHTML = data.map((p, idx) => {
+      const status = p.status || "aktif";
+      return `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${p.fotoUrl
+          ? `<img class="table-avatar" src="${p.fotoUrl}" alt="${p.name}" />`
+          : `<span class="table-avatar">${(p.name || "?").trim().charAt(0).toUpperCase()}</span>`
+        }</td>
+        <td>${p.name}</td>
+        <td>${p.email}${p.pendingEmail ? `<br><span class="pending-email-badge" title="Pelatih meminta ganti email, menunggu link verifikasi diklik">⏳ menunggu verifikasi ke ${p.pendingEmail}</span>` : ""}</td>
+        <td>${p.phone || "—"}</td>
+        <td>${p.alamat || "—"}</td>
+        <td>
+          <span class="status-pill ${status}">${statusLabel[status] || status}</span>
+          ${status === "menunggu_verifikasi"
+            ? `<button class="btn-resend" data-email="${p.email}" type="button">Kirim ulang link aktivasi</button>`
+            : ""
+          }
+        </td>
+        <td><button class="btn-hapus" data-uid="${p.uid}" data-nama="${p.name}" type="button">🗑️ Hapus</button></td>
+      </tr>
+    `;
+    }).join("");
+  }
+  renderPelatihTable();
+
+  const btnRefreshPelatih = document.getElementById("btn-refresh-pelatih");
+  btnRefreshPelatih.addEventListener("click", async () => {
+    btnRefreshPelatih.disabled = true;
+    btnRefreshPelatih.classList.add("is-spinning");
+    try {
+      await renderPelatihTable();
+    } finally {
+      btnRefreshPelatih.disabled = false;
+      btnRefreshPelatih.classList.remove("is-spinning");
+    }
+  });
+
+  document.getElementById("pelatih-table-body").addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-resend");
+    if (!btn) return;
+    const { email } = btn.dataset;
+    btn.disabled = true;
+    btn.textContent = "Mengirim...";
+    try {
+      await resendPelatihVerification(email);
+      btn.textContent = "Terkirim ✓";
+    } catch (err) {
+      console.error(err);
+      alert("Gagal mengirim ulang: " + err.message);
+      btn.disabled = false;
+      btn.textContent = "Kirim ulang link aktivasi";
+    }
+  });
+
+  document.getElementById("pelatih-table-body").addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-hapus");
+    if (!btn) return;
+    const { uid, nama } = btn.dataset;
+    if (!confirm(`Yakin mau hapus akun pelatih "${nama}"? Dia nggak akan bisa login lagi ke portal pelatih. Laporan yang sudah pernah dia buat tetap tersimpan sebagai arsip.`)) return;
+
+    btn.disabled = true;
+    btn.textContent = "Menghapus...";
+    try {
+      await deletePelatih(uid);
+      await renderPelatihTable();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menghapus: " + err.message);
+      btn.disabled = false;
+      btn.textContent = "🗑️ Hapus";
+    }
+  });
+
+  const formPelatih = document.getElementById("form-pelatih");
+  const msgPelatih = document.getElementById("msg-pelatih");
+  const submitBtnPelatih = document.getElementById("btn-submit-pelatih");
+
+  const fotoLinkInput = document.getElementById("p-foto-link");
+  const fotoPreview = document.getElementById("p-foto-preview");
+  const fotoStatus = document.getElementById("p-foto-status");
+  let fotoPreviewToken = 0;
+  const fotoStatusDefault = fotoStatus.innerHTML;
+
+  function previewFotoPelatih(url) {
+    url = (url || "").trim();
+    const myToken = ++fotoPreviewToken;
+    if (!url) {
+      fotoPreview.className = "foto-preview is-empty";
+      fotoPreview.innerHTML = "🧑";
+      fotoStatus.innerHTML = fotoStatusDefault;
+      fotoStatus.className = "foto-upload-status";
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      if (myToken !== fotoPreviewToken) return;
+      fotoPreview.className = "foto-preview";
+      fotoPreview.innerHTML = `<img src="${url}" alt="Preview foto" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+      fotoStatus.textContent = "Gambar berhasil dimuat ✓";
+      fotoStatus.className = "foto-upload-status ok";
+    };
+    img.onerror = () => {
+      if (myToken !== fotoPreviewToken) return;
+      fotoPreview.className = "foto-preview is-empty";
+      fotoPreview.innerHTML = "🧑";
+      fotoStatus.textContent = "Link gambar tidak bisa dimuat. Pastikan itu bagian src dari kode \"HTML full linked\" ImgBB.";
+      fotoStatus.className = "foto-upload-status err";
+    };
+    img.src = url;
+  }
+
+  fotoLinkInput.addEventListener("blur", () => previewFotoPelatih(fotoLinkInput.value));
+
+  const passwordInput = document.getElementById("p-password");
+  const passwordToggleBtn = document.getElementById("p-password-toggle");
+  passwordToggleBtn.addEventListener("click", () => {
+    const isHidden = passwordInput.type === "password";
+    passwordInput.type = isHidden ? "text" : "password";
+    passwordToggleBtn.classList.toggle("is-revealed", isHidden);
+    passwordToggleBtn.setAttribute("aria-label", isHidden ? "Sembunyikan password" : "Tampilkan password");
+    passwordToggleBtn.title = isHidden ? "Sembunyikan password" : "Tampilkan password";
+  });
+
+  formPelatih.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msgPelatih.textContent = "";
+    msgPelatih.className = "form-msg";
+
+    const nama = document.getElementById("p-nama").value.trim();
+    const kontak = document.getElementById("p-kontak").value.trim();
+    const email = document.getElementById("p-email").value.trim();
+    const password = document.getElementById("p-password").value;
+    const alamat = document.getElementById("p-alamat").value.trim();
+
+    if (!nama || !kontak || !email || !password || !alamat) {
+      msgPelatih.textContent = "Lengkapi semua field dulu ya.";
+      msgPelatih.classList.add("err");
+      return;
+    }
+    if (password.length < 6) {
+      msgPelatih.textContent = "Password minimal 6 karakter.";
+      msgPelatih.classList.add("err");
+      return;
+    }
+
+    submitBtnPelatih.disabled = true;
+    submitBtnPelatih.textContent = "Menyimpan...";
+    try {
+      const fotoUrl = fotoLinkInput.value.trim();
+      await addPelatih({ nama, email, password, kontak, alamat, fotoUrl });
+      formPelatih.reset();
+      previewFotoPelatih("");
+      msgPelatih.textContent = "Berhasil dibuat! Akun pelatih sudah aktif — silakan kirim email & password-nya langsung ke pelatih supaya bisa login.";
+      msgPelatih.classList.add("ok");
+      renderPelatihTable();
+    } catch (err) {
+      console.error(err);
+      let readable = err.message;
+      if (err.code === "auth/email-already-in-use") readable = "Email ini sudah dipakai akun lain.";
+      if (err.code === "auth/invalid-email") readable = "Format email tidak valid.";
+      if (err.code === "auth/weak-password") readable = "Password terlalu lemah, pakai minimal 6 karakter.";
+      msgPelatih.textContent = "Gagal menyimpan: " + readable;
+      msgPelatih.classList.add("err");
+    } finally {
+      submitBtnPelatih.disabled = false;
+      submitBtnPelatih.textContent = "Simpan Data Pelatih";
+    }
+  });
+
+  const form = document.getElementById("form-anak");
+  const msg = document.getElementById("msg-anak");
+  const submitBtn = document.getElementById("btn-submit-anak");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+    msg.className = "form-msg";
+
+    const nama = document.getElementById("f-nama").value.trim();
+    const tanggalLahir = document.getElementById("f-tgl-lahir").value;
+    const program = Array.from(document.querySelectorAll('input[name="program"]:checked')).map((c) => {
+      const [programId, subProgram] = c.value.split("::");
+      return { programId, subProgram };
+    });
+    const orangTuaNama = document.getElementById("f-ortu-nama").value.trim();
+    const orangTuaNoWa = document.getElementById("f-ortu-wa").value.trim();
+    const orangTuaAlamat = document.getElementById("f-ortu-alamat").value.trim();
+
+    if (!nama || !tanggalLahir || !orangTuaNama || !orangTuaNoWa || !orangTuaAlamat) {
+      msg.textContent = "Lengkapi semua field wajib dulu ya.";
+      msg.classList.add("err");
+      return;
+    }
+    if (!program.length) {
+      msg.textContent = "Pilih minimal 1 program.";
+      msg.classList.add("err");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Menyimpan...";
+    try {
+      await addAnak({ nama, tanggalLahir, program, orangTuaNama, orangTuaNoWa, orangTuaAlamat });
+      form.reset();
+      msg.textContent = "Berhasil disimpan!";
+      msg.classList.add("ok");
+      renderAnakTable();
+    } catch (err) {
+      console.error(err);
+      msg.textContent = "Gagal menyimpan: " + err.message;
+      msg.classList.add("err");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Simpan Data Anak";
+    }
+  });
+</script>
+</body>
+</html>

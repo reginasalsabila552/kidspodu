@@ -1,0 +1,24 @@
+
+.zone-artikel-listing-bg,
+.zone-artikel-detail-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.zone-artikel-listing { position: relative; }
+.zone-artikel-listing-bg {
+    background-image: url('../assets/images/artikel1.webp');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.zone-artikel-detail { position: relative; }
+.zone-artikel-detail-bg {
+    background-image: url('../assets/images/artikel2.webp');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+}

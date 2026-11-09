@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard-admin
+Disallow: /dashboard-admin-absensi
+Disallow: /dashboard-admin-artikel
+Disallow: /dashboard-admin-laporan
+Disallow: /dashboard-admin-pendaftaran
+Disallow: /dashboard-admin-sosmed
+Disallow: /dashboard-admin-team
+Disallow: /dashboard-admin-testimoni
+Disallow: /dashboard-pelatih
+Disallow: /pelatih-laporan
+Disallow: /pelatih-program
+Disallow: /pelatih-riwayat
+Disallow: /portal-login
+
+Sitemap: https://kidspodu.web.app/sitemap.xml

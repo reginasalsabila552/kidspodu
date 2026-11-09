@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+<title>Laporan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  body {
+    background: radial-gradient(circle at 8% 12%, #efeafe 0%, transparent 42%),
+                radial-gradient(circle at 95% 85%, #dff6f0 0%, transparent 45%),
+                linear-gradient(160deg, #f3f1fd 0%, #eef4fc 55%, #eaf5fd 100%);
+    min-height: 100vh;
+    padding: 26px;
+  }
+
+  .app-shell {
+    max-width: 1520px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+    display: flex;
+    overflow: hidden;
+    min-height: calc(100vh - 52px);
+  }
+
+  .sidebar {
+    width: 260px;
+    flex: none;
+    background: var(--purple-900);
+    color: #fff;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar .brand { display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 40px; padding: 0 8px; }
+  .sidebar .brand-mark { width: 76px; height: 76px; object-fit: contain; flex: none; }
+
+  .nav-group { display: flex; flex-direction: column; gap: 6px; }
+  .sidebar nav a, .sidebar nav button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; color: rgba(255,255,255,.68); font-family: inherit; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s;
+    background: transparent; border: none;
+  }
+  .sidebar nav a:hover, .sidebar nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar nav a.active { background: #fff; color: var(--purple-700); font-weight: 700; box-shadow: 0 8px 18px rgba(28,15,64,.18); }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .nav-bottom { border-top: 1px solid rgba(255,255,255,.12); padding-top: 16px; margin-top: 16px; }
+  .sidebar .nav-bottom button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .15s, color .15s;
+    background: transparent; border: none; color: #ffb9a8;
+  }
+  .sidebar .nav-bottom button:hover { background: rgba(224,86,58,.18); color: #fff; }
+
+  .sidebar-toggle {
+    display: none; flex: none; width: 40px; height: 40px; align-items: center; justify-content: center;
+    background: #fff; border: 1.5px solid #f0eefb; border-radius: 12px; font-size: 19px; color: var(--purple-700);
+    cursor: pointer; box-shadow: var(--shadow-card);
+  }
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(20, 12, 40, .45); z-index: 999;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .main-content { flex: 1; padding: 32px 34px; min-width: 0; }
+  .main-topbar h1 { font-size: 23px; color: var(--ink); }
+  .main-topbar .sub { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+
+  .breadcrumb { display: flex; flex-wrap: wrap; gap: 4px; font-size: 13px; margin: 20px 0; align-items: center; }
+  .breadcrumb button { color: var(--purple-600); font-weight: 600; background: none; }
+  .breadcrumb button:hover { text-decoration: underline; }
+  .breadcrumb .sep { color: var(--ink-soft); }
+  .breadcrumb .current { color: var(--ink); font-weight: 600; }
+
+  .card { background: #fff; border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 24px; margin-bottom: 20px; }
+  .card h3 { font-size: 16px; margin-bottom: 4px; }
+  .card .card-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+
+  .program-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .program-tile-wrap { background: #fff; border-radius: var(--radius-md); box-shadow: var(--shadow-card); display: flex; flex-direction: column; overflow: hidden; }
+  .program-tile {
+    background: none; border-radius: 0; box-shadow: none; padding: 20px 20px 14px;
+    display: flex; flex-direction: column; gap: 8px; text-align: left; cursor: pointer; border: none; font-family: inherit;
+  }
+  .program-tile-wrap:hover { transform: translateY(-3px); box-shadow: var(--shadow-pop); }
+  .program-tile .icon { width: auto; height: 64px; max-width: 100%; display: block; }
+  .program-tile .icon img { width: auto; height: 100%; max-width: 100%; object-fit: contain; display: block; }
+  .program-tile h3 { font-size: 15px; color: var(--ink); }
+  .program-tile p { font-size: 12px; color: var(--ink-soft); }
+
+  .program-template { padding: 12px 20px 18px; border-top: 1px dashed #e3e0f5; display: flex; flex-direction: column; gap: 7px; }
+  .program-template label { font-size: 11px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .03em; }
+  .program-template textarea {
+    width: 100%; resize: vertical; padding: 8px 10px; border-radius: var(--radius-sm); border: 1.5px solid #e3e0f5;
+    font-size: 12.5px; font-family: inherit; color: var(--ink); background: #fbfaff;
+  }
+  .program-template textarea:focus { outline: none; border-color: var(--purple-400); }
+  .program-template .btn-save-template {
+    align-self: flex-start; padding: 7px 14px; border-radius: var(--radius-pill); border: none;
+    background: var(--purple-100); color: var(--purple-700); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .program-template .btn-save-template:hover { background: var(--purple-400); color: #fff; }
+  .program-template .btn-save-template:disabled { opacity: .6; cursor: default; }
+  .program-template .template-save-msg { font-size: 11.5px; color: var(--teal-700); font-weight: 600; }
+  .rt-toolbar { display: flex; gap: 6px; margin-bottom: 2px; }
+  .rt-btn {
+    font-family: inherit; border: 1.5px solid #ddd9f7; background: #fff; color: var(--ink-soft);
+    border-radius: 8px; padding: 5px 11px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  }
+  .rt-btn:hover { background: var(--purple-100); color: var(--purple-700); border-color: var(--purple-300); }
+  .rt-btn.rt-italic { font-style: italic; }
+
+  .total-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--purple-100); color: var(--purple-700); font-weight: 700; font-size: 12.5px; padding: 5px 13px; border-radius: var(--radius-pill); margin-bottom: 4px; }
+
+  .cal-wrap { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+  .cal-side { flex: 1; min-width: 210px; display: flex; flex-direction: column; gap: 14px; }
+  .cal-stat { background: var(--sky); border-radius: var(--radius-md); padding: 18px 20px; }
+  .cal-stat .cal-stat-label { font-size: 11.5px; font-weight: 700; color: var(--purple-700); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .cal-stat .num { font-family: var(--font-display); font-size: 28px; color: var(--purple-700); line-height: 1.1; }
+  .cal-stat p { font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; }
+  .cal-stat.busiest .num { font-size: 19px; color: var(--ink); font-family: inherit; font-weight: 700; }
+
+  .cal-card { background: var(--sky); border-radius: var(--radius-md); padding: 20px; flex: 1 1 340px; max-width: 420px; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-head .cal-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--purple-700); }
+  .cal-head .cal-nav { display: flex; gap: 6px; }
+  .cal-head .cal-nav button {
+    width: 30px; height: 30px; border-radius: 50%; background: #fff; color: var(--purple-600); font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(36,31,92,.1); border: none; cursor: pointer; font-family: inherit;
+  }
+  .cal-head .cal-nav button:hover { background: var(--purple-100); }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-dow { font-size: 11px; font-weight: 700; color: var(--ink-soft); text-align: center; padding-bottom: 6px; }
+  .cal-day {
+    aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; color: var(--ink);
+    border-radius: 14px; cursor: pointer; position: relative; background: #fff; border: 1.5px solid transparent; font-family: inherit;
+  }
+  .cal-day:hover { border-color: var(--purple-400); }
+  .cal-day.empty { visibility: hidden; cursor: default; }
+  .cal-day.has-report { background: rgba(106,79,216,.14); color: var(--purple-700); font-weight: 700; }
+  .cal-day.today { outline: 2px solid var(--purple-600); outline-offset: -2px; }
+  .cal-day-count {
+    position: absolute; top: -5px; right: -5px; background: var(--purple-600); color: #fff; font-size: 9.5px; font-weight: 700;
+    min-width: 16px; height: 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 3px;
+    box-shadow: 0 2px 5px rgba(36,31,92,.25);
+  }
+
+  .cal-legend { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 11.5px; color: var(--ink-soft); }
+  .cal-legend .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(106,79,216,.4); }
+
+  .list-row {
+    display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: var(--radius-sm);
+    background: var(--sky); border: 1.5px solid #ddd9f7; margin-bottom: 10px; cursor: pointer;
+  }
+  .list-row:hover { border-color: var(--purple-400); }
+  .list-row strong { font-size: 14px; color: var(--ink); display: block; }
+  .list-row span { font-size: 12px; color: var(--ink-soft); }
+  .list-row .arrow { color: var(--purple-600); font-weight: 700; }
+  .empty-note { font-size: 13px; color: var(--ink-soft); padding: 10px 0; }
+
+  .report-detail { background: var(--sky); border: 1.5px solid #ddd9f7; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+  .report-detail:hover { box-shadow: var(--shadow-card); border-color: var(--purple-400); }
+  .report-detail .rd-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .report-detail .rd-head strong { font-size: 14px; }
+  .report-detail .tag { display: inline-block; background: var(--purple-100); color: var(--purple-700); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: var(--radius-pill); }
+  .rd-head .tag-group, .qf-item-head .tag-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: none; }
+  .report-detail p { font-size: 13.5px; color: var(--ink); line-height: 1.6; white-space: pre-wrap; }
+  .report-detail .catatan-khusus { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ddd9f7; }
+  .report-detail .foto-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .report-detail .foto-row img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; }
+  .report-detail .rd-more { font-size: 12px; color: var(--purple-600); font-weight: 700; margin-top: 8px; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(36,31,92,.45); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+  .modal-overlay.open { display: flex; }
+  .modal-card { background: #fff; border-radius: var(--radius-md); padding: 26px; width: 100%; max-width: 380px; box-shadow: var(--shadow-pop); }
+  .modal-card h3 { font-size: 17px; margin-bottom: 4px; }
+  .modal-card .card-sub { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 16px; }
+  .modal-detail-card { max-width: 540px; max-height: 85vh; overflow-y: auto; }
+  .modal-detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .modal-detail-head h3 { margin-bottom: 2px; }
+  .modal-close-btn { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--sky); color: var(--ink-soft); font-size: 14px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+  .modal-close-btn:hover { background: var(--purple-100); color: var(--purple-700); }
+  .dl-badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 16px; }
+  .dl-badge { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: var(--radius-pill); background: var(--purple-100); color: var(--purple-700); text-transform: uppercase; letter-spacing: .03em; }
+  .dl-block { margin-bottom: 16px; }
+  .dl-block-label { font-size: 11.5px; font-weight: 700; color: var(--purple-700); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+  .dl-block p { font-size: 13.5px; color: var(--ink); line-height: 1.6; white-space: pre-wrap; }
+  .dl-anak-block { background: var(--sky); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 10px; border: 1.5px solid #ddd9f7; }
+  .dl-anak-block .dl-anak-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+  .dl-anak-block strong { font-size: 13px; color: var(--ink); }
+  .dl-anak-block p { font-size: 13.5px; color: var(--ink); line-height: 1.6; white-space: pre-wrap; }
+  .dl-anak-actions { display: flex; gap: 6px; flex-wrap: wrap; flex: none; }
+  .dl-pdf-btn {
+    font-size: 11.5px; font-weight: 700; color: var(--purple-700); background: var(--purple-100);
+    border: none; border-radius: var(--radius-pill); padding: 5px 12px; cursor: pointer; font-family: inherit;
+  }
+  .dl-pdf-btn:hover { background: var(--purple-400); color: #fff; }
+  .dl-wa-btn {
+    font-size: 11.5px; font-weight: 700; color: #fff; background: #25D366;
+    border: none; border-radius: var(--radius-pill); padding: 5px 12px; cursor: pointer; font-family: inherit;
+  }
+  .dl-wa-btn:hover { background: #1ea952; }
+  .dl-wa-btn:disabled { background: #b9bcc2; cursor: not-allowed; }
+  .dl-foto-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .dl-foto-grid img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; cursor: zoom-in; }
+
+  .qf-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 2px; }
+  .qf-controls input[type="date"] {
+    padding: 9px 12px; border-radius: 10px; border: 1.5px solid #ddd9f7; font-family: inherit;
+    font-size: 13.5px; color: var(--ink); background: #fff;
+  }
+  .qf-controls button {
+    padding: 9px 16px; border-radius: var(--radius-pill); border: none; font-weight: 700; font-size: 12.5px;
+    cursor: pointer; font-family: inherit; background: var(--purple-100); color: var(--purple-700);
+  }
+  .qf-controls button:hover { background: var(--purple-400); color: #fff; }
+  .qf-controls button:disabled { opacity: .6; cursor: default; }
+  #qf-refresh { display: inline-flex; align-items: center; gap: 6px; }
+  .qf-refresh-icon { display: inline-block; transition: transform .5s ease; }
+  #qf-refresh.is-spinning .qf-refresh-icon { animation: qf-refresh-spin .6s linear infinite; }
+  @keyframes qf-refresh-spin { to { transform: rotate(360deg); } }
+  .qf-summary { font-size: 12.5px; color: var(--ink-soft); margin: 12px 0 0; }
+
+  .qf-results {
+    max-height: 460px; overflow-y: auto; margin-top: 12px; padding-right: 6px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .qf-results::-webkit-scrollbar { width: 7px; }
+  .qf-results::-webkit-scrollbar-track { background: transparent; }
+  .qf-results::-webkit-scrollbar-thumb { background: #ddd9f7; border-radius: 999px; }
+
+  .qf-item {
+    background: var(--sky); border: 1.5px solid #ddd9f7; border-radius: var(--radius-sm); padding: 14px 16px;
+    cursor: pointer; transition: box-shadow .15s, border-color .15s;
+  }
+  .qf-item:hover { border-color: var(--purple-400); box-shadow: var(--shadow-card); }
+  .qf-item-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .qf-item-head strong { font-size: 14px; color: var(--ink); }
+  .qf-item-head .tag { font-size: 11px; font-weight: 700; background: var(--purple-100); color: var(--purple-700); padding: 3px 9px; border-radius: var(--radius-pill); flex: none; }
+  .tag-hadir { background: #e3f7ef !important; color: #1a9c78 !important; }
+  .tag-tidak-hadir { background: #fde9ea !important; color: var(--coral-600) !important; }
+  .qf-item .qf-meta { font-size: 12px; color: var(--ink-soft); margin-bottom: 8px; }
+  .qf-item p.qf-note { font-size: 13px; color: var(--ink); line-height: 1.55; white-space: pre-wrap; margin-bottom: 12px; }
+  .qf-item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .qf-item-actions button {
+    font-size: 11.5px; font-weight: 700; border: none; border-radius: var(--radius-pill); padding: 6px 13px;
+    cursor: pointer; font-family: inherit;
+  }
+  .qf-pdf-btn { color: var(--purple-700); background: var(--purple-100); }
+  .qf-pdf-btn:hover { background: var(--purple-400); color: #fff; }
+  .qf-wa-btn { color: #fff; background: #25D366; }
+  .qf-wa-btn:hover { background: #1ea952; }
+  .qf-wa-btn:disabled { background: #b9bcc2; cursor: not-allowed; }
+  .qf-empty { font-size: 13px; color: var(--ink-soft); padding: 16px 0; text-align: center; }
+
+  @media (max-width: 1080px) {
+    body { padding: 0; }
+    .app-shell { border-radius: 0; min-height: 100vh; }
+    .sidebar-toggle { display: flex; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 260px; max-width: 80vw;
+      transform: translateX(-100%); transition: transform .25s ease; z-index: 1000; box-shadow: 0 0 0 transparent;
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 12px 0 32px rgba(20,12,40,.25); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a href="/dashboard-admin" class="brand"><img src="assets/images/logo.png" alt="KidsPodu" class="brand-mark"></a>
+
+    <nav class="nav-group">
+      <a href="/dashboard-admin">Dashboard</a>
+      <a href="/dashboard-admin-pendaftaran">Pendaftaran</a>
+      <a href="/dashboard-admin-laporan" class="active">Laporan</a>
+      <a href="/dashboard-admin-absensi">Absensi</a>
+      <a href="/dashboard-admin-artikel">Artikel</a>
+      <a href="/dashboard-admin-testimoni">Testimoni</a>
+      <a href="/dashboard-admin-team">Tim</a>
+      <a href="/dashboard-admin-sosmed">Sosmed</a>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="nav-bottom">
+      <button type="button" id="logout-btn">Keluar</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main-content">
+    <div class="main-topbar">
+      <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Buka menu">☰</button>
+      <div>
+        <h1>Laporan</h1>
+        <p class="sub" id="who-am-i">Memuat...</p>
+      </div>
+    </div>
+
+    <div class="card" id="quick-filter-card">
+      <h3>Cari Laporan Cepat berdasarkan Tanggal</h3>
+      <div class="qf-controls">
+        <input type="date" id="qf-date" />
+        <button type="button" id="qf-today">Hari Ini</button>
+        <button type="button" id="qf-clear">Tampilkan Semua</button>
+        <button type="button" id="qf-refresh" title="Muat ulang daftar laporan"><span class="qf-refresh-icon">⟳</span> Refresh</button>
+      </div>
+      <p class="qf-summary" id="qf-summary">Memuat laporan...</p>
+      <div class="qf-results" id="qf-results"></div>
+    </div>
+
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div id="content"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modal-detail-laporan">
+  <div class="modal-card modal-detail-card">
+    <div class="modal-detail-head">
+      <div>
+        <h3 id="dl-title">—</h3>
+        <p class="card-sub" id="dl-sub" style="margin-bottom:0;">—</p>
+      </div>
+      <button type="button" class="modal-close-btn" id="btn-close-detail">✕</button>
+    </div>
+    <div class="dl-badge-row" id="dl-badges"></div>
+    <div id="dl-body"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { guardDashboard, wireLogout } from "./js/auth-guard.js";
+  import { getPrograms } from "./js/data.js";
+  import { listLaporanByProgram, listAllLaporan, tanggalToKey, formatTanggal, TIPE_SESI_LABEL, buildLaporanMessage, buildWaLink, isTipeMultiAnak, isAnakHadir } from "./js/report-service.js";
+  import { openReportDetailModal, wireReportDetailModalClose } from "./js/report-detail-modal.js";
+  import { buildLaporanPdf, laporanPdfFilename } from "./js/report-pdf.js";
+  import { listProgramTemplates, saveProgramTemplate, programHasSubTemplates, templateKey } from "./js/program-template-service.js";
+  import { attachRichTextToolbar } from "./js/rich-text-toolbar.js";
+
+  guardDashboard("admin", (userData) => {
+    document.getElementById("who-am-i").textContent =
+      `Masuk sebagai ${userData.name || userData.email} · Admin`;
+  });
+  wireLogout("#logout-btn");
+
+  const sidebarEl = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  function openSidebar() { sidebarEl.classList.add("open"); sidebarOverlay.classList.add("open"); }
+  function closeSidebar() { sidebarEl.classList.remove("open"); sidebarOverlay.classList.remove("open"); }
+  sidebarToggle.addEventListener("click", () => {
+    sidebarEl.classList.contains("open") ? closeSidebar() : openSidebar();
+  });
+  sidebarOverlay.addEventListener("click", closeSidebar);
+  sidebarEl.querySelectorAll("a, button").forEach((el) => el.addEventListener("click", closeSidebar));
+  wireReportDetailModalClose();
+
+  const ICON_IMG = {
+    terapi: "assets/images/maskot-terapi.webp",
+    olahraga: "assets/images/maskot-olahraga.webp",
+    psikolog: "assets/images/maskot-psikolog.webp",
+    lifeskill: "assets/images/maskot-lifeskill.webp",
+    "shadow-teacher": "assets/images/maskot-shadow-teacher.webp",
+    intervention: "assets/images/maskot-intervention.webp",
+    vokasi: "assets/images/maskot-vokasi.webp",
+  };
+  const programs = await getPrograms();
+  let programTemplates = await listProgramTemplates();
+  const content = document.getElementById("content");
+  const breadcrumbEl = document.getElementById("breadcrumb");
+  const quickFilterCard = document.getElementById("quick-filter-card");
+
+  let state = { step: "program" };
+  let programReports = [];
+  let calYear, calMonth;
+
+  const BULAN_ID = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const DOW_ID = ["Sen","Sel","Rab","Kam","Jum","Sab","Min"];
+
+  function renderBreadcrumb() {
+    const parts = [{ label: "Pilih Program", onClick: () => goTo({ step: "program" }) }];
+    if (state.programTitle) {
+      parts.push({ label: state.programTitle, onClick: () => goTo({ step: "tanggal", programId: state.programId, programTitle: state.programTitle }) });
+    }
+    if (state.tanggal) {
+      parts.push({
+        label: formatTanggal(new Date(state.tanggal)),
+        onClick: () => goTo({ step: "anak", programId: state.programId, programTitle: state.programTitle, tanggal: state.tanggal }),
+      });
+    }
+    if (state.anakNama) {
+      parts.push({
+        label: state.anakNama,
+        onClick: () => goTo({ step: "pelatih", programId: state.programId, programTitle: state.programTitle, tanggal: state.tanggal, anakId: state.anakId, anakNama: state.anakNama }),
+      });
+    }
+    if (state.pelatihNama) {
+      parts.push({ label: state.pelatihNama, onClick: null });
+    }
+
+    breadcrumbEl.innerHTML = parts.map((p, i) => {
+      const isLast = i === parts.length - 1;
+      const el = isLast || !p.onClick
+        ? `<span class="current">${p.label}</span>`
+        : `<button type="button" data-i="${i}">${p.label}</button>`;
+      return i === 0 ? el : `<span class="sep">›</span>${el}`;
+    }).join("");
+
+    breadcrumbEl.querySelectorAll("button").forEach((btn, idx) => {
+      btn.addEventListener("click", () => parts[Number(btn.dataset.i)].onClick());
+    });
+  }
+
+  async function goTo(next) {
+    state = next;
+    renderBreadcrumb();
+    quickFilterCard.style.display = state.step === "program" ? "" : "none";
+
+    if (state.step === "program") return renderProgramStep();
+    if (state.step === "tanggal") return renderTanggalStep();
+    if (state.step === "anak") return renderAnakStep();
+    if (state.step === "pelatih") return renderPelatihStep();
+    if (state.step === "detail") return renderDetailStep();
+  }
+
+  function renderProgramStep() {
+    content.innerHTML = `
+      <div class="card">
+        <h3>Pilih Program</h3>
+        <p class="card-sub">Pilih program untuk melihat laporan sesi yang sudah diisi pelatih.</p>
+        <div class="program-grid">
+          ${programs.map((p) => {
+            return `
+              <div class="program-tile-wrap">
+                <button class="program-tile" data-id="${p.id}">
+                  <span class="icon"><img src="${ICON_IMG[p.id] || ""}" alt="" loading="lazy" /></span>
+                  <h3>${p.title}</h3>
+                  <p>${(p.items || []).join(" · ")}</p>
+                </button>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+    content.querySelectorAll(".program-tile").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const p = programs.find((x) => x.id === btn.dataset.id);
+        content.innerHTML = `<p class="empty-note">Memuat laporan...</p>`;
+        programReports = await listLaporanByProgram(p.id);
+        goTo({ step: "tanggal", programId: p.id, programTitle: p.title });
+      });
+    });
+  }
+
+  function renderTemplateBlocks(programId) {
+    if (programHasSubTemplates(programId)) {
+      const prog = programs.find((p) => p.id === programId);
+      const subs = prog?.items || [];
+      return subs.map((sub) => templateBlockHtml(templateKey(programId, sub), sub)).join("");
+    }
+    return templateBlockHtml(programId);
+  }
+
+  function templateBlockHtml(storageKey, subLabel) {
+    const domId = slugTplId(storageKey);
+    return `
+      <div class="program-template" style="border-top:none; padding:14px 0 20px; margin-bottom:4px;">
+        <label for="${domId}">Template Isi Laporan${subLabel ? ` — ${subLabel}` : ""}</label>
+        <div class="rt-toolbar" data-rt-toolbar-tpl="${domId}">
+          <button type="button" class="rt-btn" data-wrap="*" title="Tebal">B</button>
+          <button type="button" class="rt-btn rt-italic" data-wrap="_" title="Miring">I</button>
+          <button type="button" class="rt-btn" data-bullet="1" title="Bullet list">• List</button>
+        </div>
+        <textarea id="${domId}" rows="3" placeholder="Tulis isi template di sini..">${programTemplates[storageKey] || ""}</textarea>
+        <p class="hint" style="font-size:11px;color:var(--ink-soft);margin:0;">Pakai <strong>*tebal*</strong> / <strong>_miring_</strong> / awali baris <strong>- </strong> untuk bullet.</p>
+        <button type="button" class="btn-save-template" data-id="${domId}">Simpan Template</button>
+        <span class="template-save-msg" id="${domId}-msg"></span>
+      </div>
+    `;
+  }
+
+  function slugTplId(key) {
+    return "tpl-" + key.replace(/[^a-zA-Z0-9_-]/g, "-");
+  }
+
+  function wireSaveTemplateButton(storageKey) {
+    const domId = slugTplId(storageKey);
+    const btn = document.querySelector(`.btn-save-template[data-id="${domId}"]`);
+    const textarea = document.getElementById(domId);
+    const msg = document.getElementById(`${domId}-msg`);
+    attachRichTextToolbar(document.querySelector(`[data-rt-toolbar-tpl="${domId}"]`), textarea);
+    if (!btn) return;
+    btn.addEventListener("click", async () => {
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Menyimpan...";
+      msg.textContent = "";
+      try {
+        await saveProgramTemplate(storageKey, textarea.value);
+        programTemplates[storageKey] = textarea.value.trim();
+        msg.textContent = "Tersimpan ✓";
+      } catch (err) {
+        console.error(err);
+        msg.textContent = "Gagal menyimpan.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+  }
+
+  function renderTanggalStep() {
+    const now = new Date();
+    if (calYear === undefined) { calYear = now.getFullYear(); calMonth = now.getMonth(); }
+
+    content.innerHTML = `
+      <div class="card">
+        <h3>${state.programTitle}</h3>
+        <span class="total-badge">📋 ${programReports.length} laporan tersimpan untuk program ini</span>
+        <p class="card-sub" style="margin-top:6px;">Klik tanggal di kalender untuk lihat anak-anak yang punya sesi di hari itu.</p>
+
+        ${renderTemplateBlocks(state.programId)}
+
+        <div class="cal-wrap">
+          <div class="cal-card">
+            <div class="cal-head">
+              <div class="cal-title" id="cal-title">—</div>
+              <div class="cal-nav">
+                <button type="button" id="cal-prev">‹</button>
+                <button type="button" id="cal-next">›</button>
+              </div>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+            <div class="cal-legend"><span class="dot"></span> Ada laporan di tanggal ini — angka nunjukkin jumlahnya</div>
+          </div>
+          <div class="cal-side">
+            <div class="cal-stat">
+              <div class="cal-stat-label">Bulan ini</div>
+              <div class="num" id="cal-stat-total">0</div>
+              <p>laporan tercatat</p>
+            </div>
+            <div class="cal-stat">
+              <div class="cal-stat-label">Hari Aktif</div>
+              <div class="num" id="cal-stat-days">0</div>
+              <p>hari punya sesi bulan ini</p>
+            </div>
+            <div class="cal-stat busiest">
+              <div class="cal-stat-label">Tanggal Tersibuk</div>
+              <div class="num" id="cal-stat-busiest-date">—</div>
+              <p id="cal-stat-busiest-count">Belum ada laporan bulan ini</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    renderCalendar();
+    if (programHasSubTemplates(state.programId)) {
+      const prog = programs.find((p) => p.id === state.programId);
+      (prog?.items || []).forEach((sub) => wireSaveTemplateButton(templateKey(state.programId, sub)));
+    } else {
+      wireSaveTemplateButton(state.programId);
+    }
+
+    document.getElementById("cal-prev").addEventListener("click", () => {
+      calMonth -= 1;
+      if (calMonth < 0) { calMonth = 11; calYear -= 1; }
+      renderCalendar();
+    });
+    document.getElementById("cal-next").addEventListener("click", () => {
+      calMonth += 1;
+      if (calMonth > 11) { calMonth = 0; calYear += 1; }
+      renderCalendar();
+    });
+  }
+
+  function renderCalendar() {
+    const todayKey = tanggalToKey(new Date());
+
+    const countByKey = new Map();
+    programReports.forEach((r) => {
+      const key = tanggalToKey(r.tanggal);
+      countByKey.set(key, (countByKey.get(key) || 0) + 1);
+    });
+
+    document.getElementById("cal-title").textContent = `${BULAN_ID[calMonth]} ${calYear}`;
+
+    const first = new Date(calYear, calMonth, 1);
+    const startDow = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+    const cells = [];
+    for (let i = 0; i < startDow; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+    const grid = document.getElementById("cal-grid");
+    grid.innerHTML =
+      DOW_ID.map((d) => `<div class="cal-dow">${d}</div>`).join("") +
+      cells.map((d) => {
+        if (!d) return `<div class="cal-day empty"></div>`;
+        const key = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const count = countByKey.get(key) || 0;
+        const classes = ["cal-day"];
+        if (key === todayKey) classes.push("today");
+        if (count > 0) classes.push("has-report");
+        return `
+          <button type="button" class="${classes.join(" ")}" data-key="${key}" title="${count > 0 ? `${count} laporan pada tanggal ini` : "Tidak ada laporan pada tanggal ini"}">
+            ${d}
+            ${count > 0 ? `<span class="cal-day-count">${count}</span>` : ""}
+          </button>
+        `;
+      }).join("");
+
+    grid.querySelectorAll(".cal-day:not(.empty)").forEach((cell) => {
+      cell.addEventListener("click", () => {
+        goTo({ step: "anak", programId: state.programId, programTitle: state.programTitle, tanggal: cell.dataset.key });
+      });
+    });
+
+    const monthPrefix = `${calYear}-${String(calMonth + 1).padStart(2, "0")}`;
+    const monthKeys = Array.from(countByKey.keys()).filter((k) => k.startsWith(monthPrefix));
+    const monthTotal = monthKeys.reduce((sum, k) => sum + countByKey.get(k), 0);
+
+    document.getElementById("cal-stat-total").textContent = monthTotal;
+    document.getElementById("cal-stat-days").textContent = monthKeys.length;
+
+    if (monthKeys.length) {
+      const busiestKey = monthKeys.reduce((a, b) => (countByKey.get(b) > countByKey.get(a) ? b : a));
+      const busiestDay = Number(busiestKey.split("-")[2]);
+      document.getElementById("cal-stat-busiest-date").textContent = `${busiestDay} ${BULAN_ID[calMonth]}`;
+      document.getElementById("cal-stat-busiest-count").textContent = `${countByKey.get(busiestKey)} laporan pada tanggal itu`;
+    } else {
+      document.getElementById("cal-stat-busiest-date").textContent = "—";
+      document.getElementById("cal-stat-busiest-count").textContent = "Belum ada laporan bulan ini";
+    }
+  }
+
+  function renderAnakStep() {
+    const dayReports = programReports.filter((r) => tanggalToKey(r.tanggal) === state.tanggal);
+    const anakMap = new Map();
+    dayReports.forEach((r) => {
+      (r.anakList || []).forEach((a) => {
+        if (!anakMap.has(a.anakId)) anakMap.set(a.anakId, { anakId: a.anakId, nama: a.nama, count: 0 });
+        anakMap.get(a.anakId).count += 1;
+      });
+    });
+    const anakArr = Array.from(anakMap.values()).sort((a, b) => a.nama.localeCompare(b.nama));
+
+    content.innerHTML = `
+      <div class="card">
+        <h3>Anak dengan sesi pada ${formatTanggal(new Date(state.tanggal))}</h3>
+        <p class="card-sub">Program: ${state.programTitle}</p>
+        ${anakArr.length ? "" : `<p class="empty-note">Tidak ada laporan sesi di tanggal ini.</p>`}
+        <div id="anak-rows"></div>
+      </div>
+    `;
+    const rows = document.getElementById("anak-rows");
+    rows.innerHTML = anakArr.map((a) => `
+      <div class="list-row" data-id="${a.anakId}" data-nama="${a.nama}">
+        <div><strong>${a.nama}</strong><span>${a.count} laporan pada tanggal ini</span></div>
+        <span class="arrow">→</span>
+      </div>
+    `).join("");
+    rows.querySelectorAll(".list-row").forEach((row) => {
+      row.addEventListener("click", () => {
+        goTo({ ...state, step: "pelatih", anakId: row.dataset.id, anakNama: row.dataset.nama });
+      });
+    });
+  }
+
+  function renderPelatihStep() {
+    const anakReports = programReports.filter((r) => (r.anakIds || []).includes(state.anakId));
+    const pelatihMap = new Map();
+    anakReports.forEach((r) => {
+      if (!pelatihMap.has(r.pelatihUid)) pelatihMap.set(r.pelatihUid, { uid: r.pelatihUid, nama: r.pelatihNama, count: 0 });
+      pelatihMap.get(r.pelatihUid).count += 1;
+    });
+    const pelatihArr = Array.from(pelatihMap.values()).sort((a, b) => a.nama.localeCompare(b.nama));
+
+    content.innerHTML = `
+      <div class="card">
+        <h3>Pelatih yang pernah melatih ${state.anakNama}</h3>
+        <p class="card-sub">Program: ${state.programTitle} · Total ${anakReports.length} laporan</p>
+        ${pelatihArr.length ? "" : `<p class="empty-note">Belum ada laporan untuk anak ini.</p>`}
+        <div id="pelatih-rows"></div>
+      </div>
+    `;
+    const rows = document.getElementById("pelatih-rows");
+    rows.innerHTML = pelatihArr.map((p) => `
+      <div class="list-row" data-uid="${p.uid}" data-nama="${p.nama}">
+        <div><strong>${p.nama}</strong><span>${p.count} sesi bersama ${state.anakNama}</span></div>
+        <span class="arrow">→</span>
+      </div>
+    `).join("");
+    rows.querySelectorAll(".list-row").forEach((row) => {
+      row.addEventListener("click", () => {
+        goTo({ ...state, step: "detail", pelatihUid: row.dataset.uid, pelatihNama: row.dataset.nama });
+      });
+    });
+  }
+
+  function renderDetailStep() {
+    const reports = programReports
+      .filter((r) => (r.anakIds || []).includes(state.anakId) && r.pelatihUid === state.pelatihUid)
+      .sort((a, b) => (b.tanggal?.toMillis?.() || 0) - (a.tanggal?.toMillis?.() || 0));
+
+    content.innerHTML = `
+      <div class="card">
+        <h3>Laporan ${state.pelatihNama} untuk ${state.anakNama}</h3>
+        <p class="card-sub">Program: ${state.programTitle} · ${reports.length} sesi tercatat · Klik salah satu untuk lihat detail lengkap.</p>
+        <div id="detail-rows"></div>
+      </div>
+    `;
+    const wrap = document.getElementById("detail-rows");
+    wrap.innerHTML = reports.map((r) => {
+      const anakEntry = (r.anakList || []).find((a) => a.anakId === state.anakId);
+      const hadirTag = isTipeMultiAnak(r.tipe)
+        ? (isAnakHadir(anakEntry) ? `<span class="tag tag-hadir">✓ Hadir</span>` : `<span class="tag tag-tidak-hadir">✕ Tidak Hadir</span>`)
+        : "";
+      return `
+        <div class="report-detail" data-id="${r.id}">
+          <div class="rd-head">
+            <strong>${formatTanggal(r.tanggal)}${r.subProgram ? " · " + r.subProgram : ""}</strong>
+            <div class="tag-group">
+              <span class="tag">${TIPE_SESI_LABEL[r.tipe] || "Private"}</span>
+              ${hadirTag}
+            </div>
+          </div>
+          <p>${r.laporanUmum || "—"}</p>
+          ${anakEntry?.catatanKhusus ? `<div class="catatan-khusus"><strong style="font-size:12.5px;">Catatan khusus untuk ${state.anakNama}:</strong><p>${anakEntry.catatanKhusus}</p></div>` : ""}
+          ${(r.fotoUrls || []).length ? `<div class="foto-row">${r.fotoUrls.map((u) => `<img src="${u}" alt="Dokumentasi" />`).join("")}</div>` : ""}
+          <p class="rd-more">Lihat detail laporan →</p>
+        </div>
+      `;
+    }).join("") || `<p class="empty-note">Belum ada laporan.</p>`;
+
+    wrap.querySelectorAll(".report-detail").forEach((card) => {
+      card.addEventListener("click", () => {
+        const report = reports.find((r) => r.id === card.dataset.id);
+        openReportDetailModal(report, {
+          canDelete: true,
+          onDeleted: (id) => {
+            programReports = programReports.filter((r) => r.id !== id);
+            renderDetailStep();
+          },
+        });
+      });
+    });
+  }
+
+  const qfDateInput = document.getElementById("qf-date");
+  const qfResults = document.getElementById("qf-results");
+  const qfSummary = document.getElementById("qf-summary");
+  const qfRefreshBtn = document.getElementById("qf-refresh");
+
+  let allReportsCache = null;
+  async function ensureAllReports() {
+    if (!allReportsCache) allReportsCache = await listAllLaporan();
+    return allReportsCache;
+  }
+
+  qfRefreshBtn.addEventListener("click", async () => {
+    qfRefreshBtn.disabled = true;
+    qfRefreshBtn.classList.add("is-spinning");
+    allReportsCache = null;
+    await renderQuickFilter();
+    qfRefreshBtn.disabled = false;
+    qfRefreshBtn.classList.remove("is-spinning");
+  });
+
+  function todayKeyLocal() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  async function renderQuickFilter() {
+    qfSummary.textContent = "Memuat laporan...";
+    qfResults.innerHTML = "";
+    const reports = await ensureAllReports();
+    const selected = qfDateInput.value;
+
+    const filtered = selected
+      ? reports.filter((r) => tanggalToKey(r.tanggal) === selected)
+      : reports.slice(0, 30);
+
+    qfSummary.textContent = selected
+      ? `${filtered.length} laporan ditemukan pada ${formatTanggal(new Date(selected + "T00:00:00"))}`
+      : `Menampilkan ${filtered.length} laporan terbaru dari semua tanggal. Pilih tanggal di atas buat mempersempit.`;
+
+    if (!filtered.length) {
+      qfResults.innerHTML = `<p class="qf-empty">${selected ? "Tidak ada laporan pada tanggal ini." : "Belum ada laporan yang masuk."}</p>`;
+      return;
+    }
+
+    const items = [];
+    filtered.forEach((r) => (r.anakList || []).forEach((a) => items.push({ report: r, anak: a })));
+
+    qfResults.innerHTML = items.map(({ report: r, anak: a }, i) => {
+      const tidakHadir = isTipeMultiAnak(r.tipe) && !isAnakHadir(a);
+      return `
+      <div class="qf-item" data-idx="${i}">
+        <div class="qf-item-head">
+          <strong>${a.nama}</strong>
+          <div class="tag-group">
+            <span class="tag">${TIPE_SESI_LABEL[r.tipe] || "Private"}</span>
+            ${isTipeMultiAnak(r.tipe) ? (tidakHadir ? `<span class="tag tag-tidak-hadir">✕ Tidak Hadir</span>` : `<span class="tag tag-hadir">✓ Hadir</span>`) : ""}
+          </div>
+        </div>
+        <div class="qf-meta">${r.programTitle || "—"}${r.subProgram ? " · " + r.subProgram : ""} · ${formatTanggal(r.tanggal)} · Pelatih: ${r.pelatihNama || "—"}</div>
+        ${tidakHadir ? "" : `
+        <div class="qf-item-actions">
+          <button type="button" class="qf-pdf-btn" data-act="pdf">📄 Unduh PDF</button>
+          <button type="button" class="qf-wa-btn" data-act="wa" ${a.orangTuaNoWa ? "" : "disabled title=\"Nomor WA orang tua tidak ada\""}>💬 Kirim ke Orang Tua</button>
+        </div>
+        `}
+      </div>
+    `;
+    }).join("");
+
+    qfResults.querySelectorAll(".qf-item").forEach((card) => {
+      const { report: r, anak: a } = items[Number(card.dataset.idx)];
+
+      card.addEventListener("click", (e) => {
+        if (e.target.closest("button")) return;
+        openReportDetailModal(r, {
+          canDelete: true,
+          onDeleted: (id) => {
+            if (allReportsCache) allReportsCache = allReportsCache.filter((rep) => rep.id !== id);
+            renderQuickFilter();
+          },
+        });
+      });
+
+      const pdfBtn = card.querySelector('[data-act="pdf"]');
+      if (pdfBtn) {
+        pdfBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          await qfUnduhPdf(r, a, e.currentTarget);
+        });
+      }
+
+      const waBtn = card.querySelector('[data-act="wa"]');
+      if (waBtn && !waBtn.disabled) {
+        waBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          await qfKirimKeOrtu(r, a, e.currentTarget);
+        });
+      }
+    });
+  }
+
+  async function qfUnduhPdf(report, anakEntry, btn) {
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Menyiapkan...";
+    try {
+      const pdfDoc = await buildLaporanPdf(report, anakEntry);
+      pdfDoc.save(laporanPdfFilename(report, anakEntry));
+    } catch (err) {
+      console.error(err);
+      alert("Gagal membuat PDF: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  async function qfKirimKeOrtu(report, anakEntry, btn) {
+    if (!anakEntry.orangTuaNoWa) return;
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Menyiapkan PDF...";
+
+    const waTab = window.open("", "_blank");
+    try {
+      const pdfDoc = await buildLaporanPdf(report, anakEntry);
+      pdfDoc.save(laporanPdfFilename(report, anakEntry));
+
+      btn.textContent = "Membuka WhatsApp...";
+      const message = buildLaporanMessage({
+        orangTuaNama: anakEntry.orangTuaNama,
+        anakNama: anakEntry.nama,
+        programTitle: report.programTitle,
+        subProgram: report.subProgram,
+        tanggal: report.tanggal,
+        tipe: report.tipe,
+        laporanUmum: report.laporanUmum,
+        catatanKhusus: anakEntry.catatanKhusus,
+      });
+      const link = buildWaLink(anakEntry.orangTuaNoWa, message);
+      if (waTab) waTab.location.href = link;
+      else window.open(link, "_blank");
+    } catch (err) {
+      console.error(err);
+      if (waTab) waTab.close();
+      alert("Gagal membuat PDF: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  qfDateInput.value = todayKeyLocal();
+  qfDateInput.addEventListener("change", renderQuickFilter);
+  document.getElementById("qf-today").addEventListener("click", () => { qfDateInput.value = todayKeyLocal(); renderQuickFilter(); });
+  document.getElementById("qf-clear").addEventListener("click", () => { qfDateInput.value = ""; renderQuickFilter(); });
+  renderQuickFilter();
+
+  goTo({ step: "program" });
+</script>
+</body>
+</html>

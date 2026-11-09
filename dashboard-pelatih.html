@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+<title>Dashboard Pelatih</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  body {
+    background: radial-gradient(circle at 8% 12%, #efeafe 0%, transparent 42%),
+                radial-gradient(circle at 95% 85%, #dff6f0 0%, transparent 45%),
+                linear-gradient(160deg, #f3f1fd 0%, #eef4fc 55%, #eaf5fd 100%);
+    min-height: 100vh;
+    padding: 26px;
+  }
+
+  .app-shell {
+    max-width: 1520px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+    display: flex;
+    overflow: hidden;
+    min-height: calc(100vh - 52px);
+  }
+
+  .sidebar {
+    width: 260px;
+    flex: none;
+    background: var(--purple-900);
+    color: #fff;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar .brand { display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 40px; padding: 0 8px; }
+  .sidebar .brand-mark { width: 76px; height: 76px; object-fit: contain; flex: none; }
+
+  .nav-group { display: flex; flex-direction: column; gap: 6px; }
+  .sidebar nav a, .sidebar nav button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; color: rgba(255,255,255,.68); font-family: inherit; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s;
+    background: transparent; border: none;
+  }
+  .sidebar nav a:hover, .sidebar nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar nav a.active { background: #fff; color: var(--purple-700); font-weight: 700; box-shadow: 0 8px 18px rgba(28,15,64,.18); }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .nav-bottom { border-top: 1px solid rgba(255,255,255,.12); padding-top: 16px; margin-top: 16px; }
+  .sidebar .nav-bottom button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .15s, color .15s;
+    background: transparent; border: none; color: #ffb9a8;
+  }
+  .sidebar .nav-bottom button:hover { background: rgba(224,86,58,.18); color: #fff; }
+
+  .main-content { flex: 1; padding: 32px 34px; min-width: 0; }
+  .main-topbar { display: flex; align-items: center; gap: 14px; }
+  .main-topbar h1 { font-size: 23px; color: var(--ink); }
+  .main-topbar .sub { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+
+  .sidebar-toggle {
+    display: none; flex: none; width: 40px; height: 40px; align-items: center; justify-content: center;
+    background: #fff; border: 1.5px solid #f0eefb; border-radius: 12px; font-size: 19px; color: var(--purple-700);
+    cursor: pointer; box-shadow: var(--shadow-card);
+  }
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(20, 12, 40, .45); z-index: 999;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 26px 0 8px; }
+  .stat-cards .stat-card { background: var(--sky); border-radius: var(--radius-md); padding: 20px; }
+  .stat-cards .stat-card .num { font-family: var(--font-display); font-size: 27px; color: var(--purple-700); }
+  .stat-cards .stat-card p { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+
+  .section-title { font-size: 15px; font-weight: 700; color: var(--ink); margin: 30px 0 14px; }
+  .program-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+  .program-tile {
+    background: #fff; border: 1.5px solid #f0eefb; border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 20px;
+    display: flex; flex-direction: column; gap: 10px; text-align: left; cursor: pointer; font-family: inherit;
+  }
+  .program-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-pop); border-color: transparent; }
+  .program-tile .icon { width: auto; height: 68px; max-width: 100%; display: block; }
+  .program-tile .icon img { width: auto; height: 100%; max-width: 100%; object-fit: contain; display: block; }
+  .program-tile h3 { font-size: 15px; color: var(--ink); }
+  .program-tile p { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+
+  .right-panel { width: 300px; flex: none; background: #fff; border-left: 1px solid #f1eff9; padding: 30px 24px; }
+  .profile-row { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+  .profile-row .avatar {
+    width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--purple-500), var(--teal-500));
+    color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 16px; flex: none;
+  }
+  .profile-row .avatar.avatar-photo { object-fit: cover; }
+  .profile-row .name { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .profile-row .role { font-size: 11.5px; color: var(--ink-soft); }
+
+  .account-card { background: var(--sky); border-radius: var(--radius-md); padding: 18px; margin-bottom: 22px; }
+  .account-card .account-card-title { font-size: 12.5px; font-weight: 700; color: var(--purple-700); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px; }
+  .account-field { margin-bottom: 10px; }
+  .account-field:last-of-type { margin-bottom: 14px; }
+  .account-field .account-label { display: block; font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .account-field .account-value { display: block; font-size: 13px; font-weight: 600; color: var(--ink); word-break: break-word; }
+  .account-pw-btn { width: 100%; justify-content: center; font-size: 12.5px; padding: 10px 14px; border-radius: var(--radius-pill); display: flex; align-items: center; gap: 6px; }
+  .account-actions { display: flex; flex-direction: column; gap: 8px; }
+  .pending-email-note { font-size: 11px; color: var(--yellow-700, #a16207); background: var(--yellow-100, #fef3c7); border-radius: 8px; padding: 8px 10px; margin: 8px 0 12px; line-height: 1.5; }
+
+  .foto-upload-row { display: flex; align-items: center; gap: 14px; }
+  .foto-preview {
+    width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none;
+    background: var(--sky); border: 1.5px solid #ddd9f7;
+  }
+  .foto-preview.is-empty { display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--ink-soft); }
+  .foto-upload-btn {
+    font-size: 12.5px; font-weight: 700; color: var(--purple-700); background: var(--purple-100);
+    padding: 8px 14px; border-radius: var(--radius-pill); cursor: pointer; display: inline-block; white-space: nowrap;
+  }
+  .foto-upload-btn:hover { background: var(--purple-200, #ddd9f7); }
+  .foto-upload-status { font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
+  .foto-upload-status.err { color: var(--coral-600); }
+  .foto-upload-status.ok { color: var(--teal-700); }
+
+  .email-edit-row { display: flex; gap: 8px; align-items: flex-start; }
+  .email-edit-row input { flex: 1; }
+  .btn-kirim-verifikasi { flex: none; font-size: 12px; font-weight: 700; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--purple-100); color: var(--purple-700); white-space: nowrap; }
+  .btn-kirim-verifikasi:hover { background: var(--purple-600); color: #fff; }
+  .btn-kirim-verifikasi:disabled { opacity: .55; cursor: not-allowed; }
+  #btn-submit-ep:disabled { background: var(--purple-100); color: var(--purple-400, #a99be0); box-shadow: none; cursor: not-allowed; }
+  .email-verif-msg { display: block; font-size: 11.5px; margin-top: 6px; }
+  .email-verif-msg.ok { color: var(--teal-700); }
+  .email-verif-msg.err { color: var(--coral-600); }
+
+  .cal-card { background: var(--sky); border-radius: var(--radius-md); padding: 18px; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-head .cal-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--purple-700); }
+  .cal-head .cal-nav { display: flex; gap: 6px; }
+  .cal-head .cal-nav button {
+    width: 26px; height: 26px; border-radius: 50%; background: #fff; color: var(--purple-600); font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(36,31,92,.1);
+  }
+  .cal-head .cal-nav button:hover { background: var(--purple-100); }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-dow { font-size: 10.5px; font-weight: 700; color: var(--ink-soft); text-align: center; padding-bottom: 6px; }
+  .cal-day {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ink);
+    border-radius: 50%; cursor: default; position: relative;
+  }
+  .cal-day.empty { visibility: hidden; }
+  .cal-day.has-report { background: rgba(106,79,216,.14); color: var(--purple-700); font-weight: 700; cursor: pointer; }
+  .cal-day.today { background: var(--purple-600); color: #fff; font-weight: 700; }
+  .cal-day.today.has-report { background: var(--purple-600); color: #fff; }
+  .cal-day.selected { outline: 2px solid var(--teal-500); outline-offset: 1px; }
+
+  .cal-legend { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 11px; color: var(--ink-soft); }
+  .cal-legend .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(106,79,216,.4); }
+
+  .rp-section-title { font-size: 13px; font-weight: 700; color: var(--ink); margin: 26px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+  .rp-section-title span.rp-meta { font-size: 11px; color: var(--ink-soft); font-weight: 500; }
+  .rp-section-title .rp-clear-filter { font-size: 11px; color: var(--purple-600); font-weight: 700; background: none; padding: 0; }
+  .rp-section-title .rp-clear-filter:hover { text-decoration: underline; }
+  .laporan-row {
+    display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid #f4f2fb;
+    cursor: pointer; border-radius: 8px; transition: background .12s;
+  }
+  .laporan-row:hover { background: var(--sky); }
+  .laporan-row:last-child { border-bottom: none; }
+  .laporan-row .lr-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex: none; }
+  .laporan-row .lr-text { min-width: 0; flex: 1; }
+  .laporan-row .lr-title { font-size: 12.5px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .laporan-row .lr-sub { font-size: 11px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .laporan-row .lr-arrow { color: var(--purple-400); font-size: 13px; flex: none; }
+  .rp-empty { font-size: 12px; color: var(--ink-soft); padding: 8px 4px; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(36,31,92,.45); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+  .modal-overlay.open { display: flex; }
+  .modal-card { background: #fff; border-radius: var(--radius-md); padding: 26px; width: 100%; max-width: 380px; box-shadow: var(--shadow-pop); }
+  .modal-card h3 { font-size: 17px; margin-bottom: 4px; }
+  .modal-card .card-sub { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 16px; }
+  .modal-card .field { margin-bottom: 14px; }
+  .modal-card label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .modal-card input {
+    width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid #ddd9f7;
+    font-family: inherit; font-size: 14px; background: var(--sky);
+  }
+  .pw-field-wrap { position: relative; }
+  .pw-field-wrap input { padding-right: 42px; }
+  .pw-toggle {
+    position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-radius: 8px; color: var(--ink-soft); cursor: pointer;
+  }
+  .pw-toggle:hover { color: var(--purple-600); background: var(--purple-100); }
+  .pw-toggle svg { width: 18px; height: 18px; }
+  .pw-toggle .ic-eye-off { display: none; }
+  .pw-toggle.is-revealed .ic-eye { display: none; }
+  .pw-toggle.is-revealed .ic-eye-off { display: block; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-actions .btn-cancel { background: var(--purple-100); color: var(--purple-700); font-size: 13px; font-weight: 700; padding: 10px 16px; border-radius: var(--radius-pill); flex: 1; text-align: center; }
+  .modal-actions .btn-primary { flex: 1; justify-content: center; }
+  .form-msg { font-size: 12.5px; font-weight: 600; margin-top: 10px; display: block; }
+  .form-msg.ok { color: var(--teal-700); }
+  .form-msg.err { color: var(--coral-600); }
+
+  .modal-detail-card { max-width: 520px; max-height: 85vh; overflow-y: auto; }
+  .modal-detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .modal-detail-head h3 { margin-bottom: 2px; }
+  .modal-close-btn { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--sky); color: var(--ink-soft); font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .modal-close-btn:hover { background: var(--purple-100); color: var(--purple-700); }
+  .dl-badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 16px; }
+  .dl-badge { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: var(--radius-pill); background: var(--purple-100); color: var(--purple-700); text-transform: uppercase; letter-spacing: .03em; }
+  .dl-block { margin-bottom: 16px; }
+  .dl-block-label { font-size: 11.5px; font-weight: 700; color: var(--purple-700); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+  .dl-block p { font-size: 13.5px; color: var(--ink); line-height: 1.6; white-space: pre-wrap; }
+  .dl-anak-block { background: var(--sky); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 10px; border: 1.5px solid #ddd9f7; }
+  .dl-anak-block .dl-anak-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+  .dl-anak-block strong { font-size: 13px; color: var(--ink); display: block; margin-bottom: 4px; }
+  .dl-anak-block p { font-size: 13.5px; color: var(--ink); line-height: 1.6; white-space: pre-wrap; }
+  .dl-anak-actions { display: flex; gap: 6px; flex-wrap: wrap; flex: none; }
+  .dl-pdf-btn {
+    font-size: 11.5px; font-weight: 700; color: var(--purple-700); background: var(--purple-100);
+    padding: 5px 11px; border-radius: var(--radius-pill); border: none; cursor: pointer; white-space: nowrap; flex: none;
+  }
+  .dl-pdf-btn:hover { background: var(--purple-200, #ddd9f7); }
+  .dl-wa-btn {
+    font-size: 11.5px; font-weight: 700; color: #fff; background: #25D366;
+    padding: 5px 11px; border-radius: var(--radius-pill); border: none; cursor: pointer; white-space: nowrap; flex: none;
+  }
+  .dl-wa-btn:hover { background: #1ea952; }
+  .dl-wa-btn:disabled { background: #b9bcc2; cursor: not-allowed; }
+  .dl-foto-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .dl-foto-grid img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; cursor: zoom-in; }
+
+  @media (max-width: 1080px) {
+    body { padding: 0; }
+    .app-shell { border-radius: 0; min-height: 100vh; flex-direction: column; }
+    .sidebar-toggle { display: flex; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 260px; max-width: 80vw;
+      transform: translateX(-100%); transition: transform .25s ease; z-index: 1000; box-shadow: 0 0 0 transparent;
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 12px 0 32px rgba(20,12,40,.25); }
+    .right-panel { width: 100%; border-left: none; border-top: 1px solid #f1eff9; }
+  }
+  @media (max-width: 720px) {
+    .stat-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a href="/dashboard-pelatih" class="brand"><img src="assets/images/logo.png" alt="KidsPodu" class="brand-mark"></a>
+
+    <nav class="nav-group">
+      <a href="/dashboard-pelatih" class="active">Dashboard</a>
+      <a href="/pelatih-riwayat">Riwayat Laporan</a>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="nav-bottom">
+      <button type="button" id="logout-btn">Keluar</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main-content">
+    <div class="main-topbar">
+      <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Buka menu">☰</button>
+      <div>
+        <h1>Dashboard Pelatih</h1>
+        <p class="sub" id="who-am-i">Memuat...</p>
+      </div>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-card"><div class="num" id="stat-total">—</div><p>Total laporan yang sudah dibuat</p></div>
+      <div class="stat-card"><div class="num" id="stat-bulan">—</div><p>Laporan bulan ini</p></div>
+      <div class="stat-card"><div class="num" id="stat-terakhir">—</div><p>Laporan terakhir</p></div>
+    </div>
+
+    <div class="section-title">Pilih program untuk membuat laporan sesi</div>
+    <div class="program-grid" id="program-grid">
+      <p style="color:var(--ink-soft); font-size:13px;">Memuat program...</p>
+    </div>
+  </main>
+
+  <aside class="right-panel">
+    <div class="profile-row">
+      <div id="avatar-wrap"><div class="avatar" id="avatar-initial">?</div></div>
+      <div>
+        <div class="name" id="profile-name">Memuat...</div>
+        <div class="role">Pelatih</div>
+      </div>
+    </div>
+
+    <div class="account-card">
+      <div class="account-card-title">Informasi Akun</div>
+      <div class="account-field">
+        <span class="account-label">Nama</span>
+        <span class="account-value" id="account-name">—</span>
+      </div>
+      <div class="account-field">
+        <span class="account-label">Email</span>
+        <span class="account-value" id="account-email">—</span>
+      </div>
+      <div class="account-field">
+        <span class="account-label">No. Kontak</span>
+        <span class="account-value" id="account-phone">—</span>
+      </div>
+      <div class="account-field">
+        <span class="account-label">Alamat</span>
+        <span class="account-value" id="account-alamat">—</span>
+      </div>
+      <p class="pending-email-note" id="pending-email-note" style="display:none;"></p>
+      <div class="account-actions">
+        <button type="button" class="btn btn-soft-purple account-pw-btn" id="btn-open-edit-profil"><span>✏️</span> Edit Profil</button>
+        <button type="button" class="btn btn-soft-purple account-pw-btn" id="btn-open-ganti-pw"><span>🔑</span> Ganti Password</button>
+      </div>
+    </div>
+
+    <div class="cal-card">
+      <div class="cal-head">
+        <div class="cal-title" id="cal-title">—</div>
+        <div class="cal-nav">
+          <button type="button" id="cal-prev">‹</button>
+          <button type="button" id="cal-next">›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend"><span class="dot"></span> Ada laporan di tanggal ini</div>
+    </div>
+
+    <div class="rp-section-title"><span id="rp-title">Laporan Terbaru</span> <span class="rp-meta" id="rp-count"></span></div>
+    <button type="button" class="rp-clear-filter" id="btn-clear-tanggal" style="display:none; margin:-8px 0 10px;">✕ Tampilkan laporan terbaru</button>
+    <div id="laporan-terbaru-list">
+      <p class="rp-empty">Memuat...</p>
+    </div>
+  </aside>
+</div>
+
+<div class="modal-overlay" id="modal-detail-laporan">
+  <div class="modal-card modal-detail-card">
+    <div class="modal-detail-head">
+      <div>
+        <h3 id="dl-title">—</h3>
+        <p class="card-sub" id="dl-sub" style="margin-bottom:0;">—</p>
+      </div>
+      <button type="button" class="modal-close-btn" id="btn-close-detail">✕</button>
+    </div>
+    <div class="dl-badge-row" id="dl-badges"></div>
+    <div id="dl-body"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit-profil">
+  <div class="modal-card">
+    <h3>Edit Profil</h3>
+    <p class="card-sub">Perubahan di sini langsung ke-update juga di portal admin.</p>
+    <form id="form-edit-profil">
+      <div class="field">
+        <label>Foto Profil</label>
+        <div class="foto-upload-row">
+          <div class="foto-preview is-empty" id="ep-foto-preview">🧑</div>
+          <div style="flex:1; min-width:0;">
+            <input type="text" id="ep-foto-link" placeholder="https://i.ibb.co/xxxxx/nama-file.jpg" style="width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid #ddd9f7; font-family:inherit; font-size:13px; background:var(--sky);" />
+            <p class="foto-upload-status" id="ep-foto-status">
+              Opsional. Cara dapetin link: buka <strong>imgbb.com</strong> (tanpa akun) → upload foto →
+              pilih <strong>"Don't autodelete"</strong> → di kolom Embed codes pilih
+              <strong>"HTML full linked"</strong> → salin (copy) cuma bagian di dalam
+              <strong>src="..."</strong> → tempel di sini.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Nama</label>
+        <input type="text" id="ep-nama" required placeholder="Nama lengkap" />
+      </div>
+      <div class="field">
+        <label>No. Kontak (WhatsApp)</label>
+        <input type="text" id="ep-kontak" required placeholder="08xxxxxxxxxx" />
+      </div>
+      <div class="field">
+        <label>Alamat</label>
+        <input type="text" id="ep-alamat" placeholder="Alamat (opsional)" />
+      </div>
+      <span class="form-msg" id="ep-msg"></span>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="btn-cancel-ep">Batal</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-ep">Simpan</button>
+      </div>
+    </form>
+
+    <hr style="margin:18px 0; border:none; border-top:1px solid #f0eefb;" />
+
+    <div class="field" style="margin-bottom:0;">
+      <label>Ganti Email</label>
+      <div class="email-edit-row">
+        <input type="email" id="ep-email-baru" placeholder="Email baru" />
+        <button type="button" class="btn-kirim-verifikasi" id="btn-kirim-verifikasi">Kirim Verifikasi</button>
+      </div>
+      <span class="email-verif-msg" id="ep-email-msg"></span>
+      <p class="hint" style="font-size:11.5px; color:var(--ink-soft); margin-top:6px;">
+        Email login TIDAK langsung berganti. Kami kirim link verifikasi ke alamat baru — email baru
+        baru aktif setelah link itu diklik dari inbox email tersebut.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ganti-pw">
+  <div class="modal-card">
+    <h3>Ganti Password</h3>
+    <p class="card-sub">Masukkan password lama untuk verifikasi, lalu password baru.</p>
+    <form id="form-ganti-pw">
+      <div class="field">
+        <label>Password Lama</label>
+        <div class="pw-field-wrap">
+          <input type="password" id="pw-lama" required placeholder="Password saat ini" />
+          <button type="button" class="pw-toggle" data-target="pw-lama" aria-label="Tampilkan password">
+            <svg class="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="ic-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a17.86 17.86 0 0 1-2.44 3.66"/><path d="M6.61 6.61A17.83 17.83 0 0 0 1 13s4 8 11 8a9.7 9.7 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Password Baru</label>
+        <div class="pw-field-wrap">
+          <input type="password" id="pw-baru" required minlength="6" placeholder="Minimal 6 karakter" />
+          <button type="button" class="pw-toggle" data-target="pw-baru" aria-label="Tampilkan password">
+            <svg class="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="ic-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a17.86 17.86 0 0 1-2.44 3.66"/><path d="M6.61 6.61A17.83 17.83 0 0 0 1 13s4 8 11 8a9.7 9.7 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Ulangi Password Baru</label>
+        <div class="pw-field-wrap">
+          <input type="password" id="pw-baru-ulang" required minlength="6" placeholder="Ulangi password baru" />
+          <button type="button" class="pw-toggle" data-target="pw-baru-ulang" aria-label="Tampilkan password">
+            <svg class="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="ic-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a17.86 17.86 0 0 1-2.44 3.66"/><path d="M6.61 6.61A17.83 17.83 0 0 0 1 13s4 8 11 8a9.7 9.7 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+          </button>
+        </div>
+      </div>
+      <span class="form-msg" id="pw-msg"></span>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="btn-cancel-pw">Batal</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-pw">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import { guardDashboard, wireLogout } from "./js/auth-guard.js";
+  import { getPrograms } from "./js/data.js";
+  import { listLaporanByPelatih, formatTanggal, formatJam, tanggalToKey, needsJamSesi } from "./js/report-service.js";
+  import { changeMyPassword } from "./js/account-service.js";
+  import { openReportDetailModal, wireReportDetailModalClose } from "./js/report-detail-modal.js";
+  import { updateMyProfile, requestMyEmailChange } from "./js/pelatih-service.js";
+
+  const ICONS = {
+    terapi: "🧩", olahraga: "🏊", psikolog: "🧠", lifeskill: "🧴",
+    "shadow-teacher": "🧑‍🏫", intervention: "📘", vokasi: "🧺",
+  };
+  const ICON_IMG = {
+    terapi: "assets/images/maskot-terapi.webp",
+    olahraga: "assets/images/maskot-olahraga.webp",
+    psikolog: "assets/images/maskot-psikolog.webp",
+    lifeskill: "assets/images/maskot-lifeskill.webp",
+    "shadow-teacher": "assets/images/maskot-shadow-teacher.webp",
+    intervention: "assets/images/maskot-intervention.webp",
+    vokasi: "assets/images/maskot-vokasi.webp",
+  };
+  const COLORS = {
+    terapi: ["var(--purple-100)", "var(--purple-700)"],
+    olahraga: ["var(--blue-100)", "var(--blue-700)"],
+    psikolog: ["var(--purple-100)", "var(--purple-700)"],
+    lifeskill: ["var(--green-100)", "var(--green-600)"],
+    "shadow-teacher": ["var(--yellow-100)", "var(--yellow-700)"],
+    intervention: ["var(--teal-100)", "var(--teal-700)"],
+    vokasi: ["var(--pink-100)", "var(--pink-600)"],
+  };
+  const BULAN_ID = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const DOW_ID = ["Sen","Sel","Rab","Kam","Jum","Sab","Min"];
+
+  let me = null;
+  let myLaporan = [];
+  let reportsById = new Map();
+  let selectedDateKey = null;
+  let calYear, calMonth;
+
+  guardDashboard("pelatih", async (userData) => {
+    me = userData;
+    renderProfileInfo(userData);
+    loadStats(userData.uid);
+  });
+
+  function renderProfileInfo(userData) {
+    const displayName = userData.name || userData.email;
+    document.getElementById("who-am-i").textContent = `Masuk sebagai ${displayName} · Pelatih`;
+    document.getElementById("profile-name").textContent = displayName;
+    if (userData.fotoUrl) {
+      document.getElementById("avatar-wrap").innerHTML =
+        `<img class="avatar avatar-photo" src="${userData.fotoUrl}" alt="${displayName}" />`;
+    } else {
+      document.getElementById("avatar-wrap").innerHTML = `<div class="avatar" id="avatar-initial">?</div>`;
+      document.getElementById("avatar-initial").textContent = displayName.trim().charAt(0).toUpperCase();
+    }
+    document.getElementById("account-name").textContent = userData.name || "—";
+    document.getElementById("account-email").textContent = userData.email || "—";
+    document.getElementById("account-phone").textContent = userData.phone || "—";
+    document.getElementById("account-alamat").textContent = userData.alamat || "—";
+
+    const pendingNote = document.getElementById("pending-email-note");
+    if (userData.pendingEmail) {
+      pendingNote.style.display = "block";
+      pendingNote.textContent = `⏳ Menunggu verifikasi ganti email ke ${userData.pendingEmail}. Cek inbox email tersebut & klik link verifikasinya.`;
+    } else {
+      pendingNote.style.display = "none";
+    }
+  }
+
+  wireLogout("#logout-btn");
+
+  const sidebarEl = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  function openSidebar() { sidebarEl.classList.add("open"); sidebarOverlay.classList.add("open"); }
+  function closeSidebar() { sidebarEl.classList.remove("open"); sidebarOverlay.classList.remove("open"); }
+  sidebarToggle.addEventListener("click", () => {
+    sidebarEl.classList.contains("open") ? closeSidebar() : openSidebar();
+  });
+  sidebarOverlay.addEventListener("click", closeSidebar);
+  sidebarEl.querySelectorAll("a, button").forEach((el) => el.addEventListener("click", closeSidebar));
+
+  async function loadStats(uid) {
+    try {
+      myLaporan = await listLaporanByPelatih(uid);
+      reportsById = new Map(myLaporan.map((l) => [l.id, l]));
+      document.getElementById("stat-total").textContent = myLaporan.length;
+
+      const now = new Date();
+      const bulanIni = myLaporan.filter((l) => {
+        const d = l.tanggal?.toDate ? l.tanggal.toDate() : new Date(l.tanggal);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      });
+      document.getElementById("stat-bulan").textContent = bulanIni.length;
+      document.getElementById("stat-terakhir").textContent = myLaporan.length ? formatTanggal(myLaporan[0].tanggal) : "—";
+
+      renderLaporanTerbaru();
+      calYear = now.getFullYear();
+      calMonth = now.getMonth();
+      renderCalendar();
+    } catch (err) {
+      console.error(err);
+      document.getElementById("stat-total").textContent = "0";
+      document.getElementById("stat-bulan").textContent = "0";
+      document.getElementById("stat-terakhir").textContent = "—";
+      document.getElementById("laporan-terbaru-list").innerHTML = `<p class="rp-empty">Gagal memuat laporan.</p>`;
+    }
+  }
+
+  function renderLaporanTerbaru() {
+    const wrap = document.getElementById("laporan-terbaru-list");
+    const titleEl = document.getElementById("rp-title");
+    const clearBtn = document.getElementById("btn-clear-tanggal");
+
+    let list;
+    if (selectedDateKey) {
+      list = myLaporan.filter((l) => tanggalToKey(l.tanggal) === selectedDateKey);
+      const [y, m, d] = selectedDateKey.split("-").map(Number);
+      titleEl.textContent = `Laporan ${formatTanggal(new Date(y, m - 1, d))}`;
+      clearBtn.style.display = "block";
+    } else {
+      list = myLaporan.slice(0, 5);
+      titleEl.textContent = "Laporan Terbaru";
+      clearBtn.style.display = "none";
+    }
+
+    document.getElementById("rp-count").textContent = list.length ? `${list.length} laporan` : "";
+
+    if (!list.length) {
+      wrap.innerHTML = selectedDateKey
+        ? `<p class="rp-empty">Tidak ada laporan pada tanggal ini.</p>`
+        : `<p class="rp-empty">Belum ada laporan yang dibuat.</p>`;
+      return;
+    }
+
+    wrap.innerHTML = list.map((l) => {
+      const [bg, fg] = COLORS[l.programId] || ["var(--purple-100)", "var(--purple-700)"];
+      const anakNames = (l.anakList || []).map((a) => a.nama).join(", ");
+      return `
+        <div class="laporan-row" data-id="${l.id}">
+          <div class="lr-icon" style="background:${bg}; color:${fg};">${ICONS[l.programId] || "📌"}</div>
+          <div class="lr-text">
+            <div class="lr-title">${l.subProgram || l.programTitle} · ${anakNames || "-"}</div>
+            <div class="lr-sub">${formatTanggal(l.tanggal)}${needsJamSesi(l.programId) ? " · " + formatJam(l.tanggal) : ""}</div>
+          </div>
+          <span class="lr-arrow">›</span>
+        </div>
+      `;
+    }).join("");
+
+    wrap.querySelectorAll(".laporan-row").forEach((row) => {
+      row.addEventListener("click", () => openReportDetailModal(reportsById.get(row.dataset.id), {
+        canEdit: true,
+        canDelete: true,
+        onDeleted: () => { if (me) loadStats(me.uid); },
+      }));
+    });
+  }
+
+  document.getElementById("btn-clear-tanggal").addEventListener("click", () => {
+    selectedDateKey = null;
+    renderCalendar();
+    renderLaporanTerbaru();
+  });
+
+  wireReportDetailModalClose();
+
+  function renderCalendar() {
+    const todayKey = tanggalToKey(new Date());
+    const reportDateKeys = new Set(myLaporan.map((l) => tanggalToKey(l.tanggal)));
+
+    document.getElementById("cal-title").textContent = `${BULAN_ID[calMonth]} ${calYear}`;
+
+    const first = new Date(calYear, calMonth, 1);
+    const startDow = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+    const cells = [];
+    for (let i = 0; i < startDow; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+    const grid = document.getElementById("cal-grid");
+    grid.innerHTML =
+      DOW_ID.map((d) => `<div class="cal-dow">${d}</div>`).join("") +
+      cells.map((d) => {
+        if (!d) return `<div class="cal-day empty"></div>`;
+        const key = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const classes = ["cal-day"];
+        if (key === todayKey) classes.push("today");
+        if (reportDateKeys.has(key)) classes.push("has-report");
+        if (key === selectedDateKey) classes.push("selected");
+        return `<div class="${classes.join(" ")}" data-key="${key}" title="${reportDateKeys.has(key) ? "Ada laporan di tanggal ini — klik untuk lihat" : "Klik untuk lihat laporan di tanggal ini"}">${d}</div>`;
+      }).join("");
+
+    grid.querySelectorAll(".cal-day:not(.empty)").forEach((cell) => {
+      cell.style.cursor = "pointer";
+      cell.addEventListener("click", () => {
+        selectedDateKey = cell.dataset.key === selectedDateKey ? null : cell.dataset.key;
+        renderCalendar();
+        renderLaporanTerbaru();
+      });
+    });
+  }
+
+  document.getElementById("cal-prev").addEventListener("click", () => {
+    calMonth -= 1;
+    if (calMonth < 0) { calMonth = 11; calYear -= 1; }
+    renderCalendar();
+  });
+  document.getElementById("cal-next").addEventListener("click", () => {
+    calMonth += 1;
+    if (calMonth > 11) { calMonth = 0; calYear += 1; }
+    renderCalendar();
+  });
+
+  const grid = document.getElementById("program-grid");
+  try {
+    const programs = await getPrograms();
+    grid.innerHTML = programs.map((p) => {
+      return `
+        <button class="program-tile" data-id="${p.id}" type="button">
+          <span class="icon"><img src="${ICON_IMG[p.id] || ""}" alt="" loading="lazy" /></span>
+          <h3>${p.title}</h3>
+          <p>${(p.items || []).join(" · ")}</p>
+        </button>
+      `;
+    }).join("");
+
+    grid.querySelectorAll(".program-tile").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.id;
+        if (id === "olahraga") {
+          window.location.href = `pelatih-program.html?id=${encodeURIComponent(id)}`;
+        } else {
+          const p = programs.find((pr) => pr.id === id);
+          const title = p ? p.title : id;
+          window.location.href = `pelatih-laporan.html?programId=${encodeURIComponent(id)}&programTitle=${encodeURIComponent(title)}`;
+        }
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    grid.innerHTML = `<p style="color:var(--coral-600); font-size:13px;">Gagal memuat daftar program.</p>`;
+  }
+
+  const epModal = document.getElementById("modal-edit-profil");
+  const epForm = document.getElementById("form-edit-profil");
+  const epMsg = document.getElementById("ep-msg");
+  const epFotoLink = document.getElementById("ep-foto-link");
+  const epFotoPreview = document.getElementById("ep-foto-preview");
+  const epFotoStatus = document.getElementById("ep-foto-status");
+  const epFotoStatusDefault = epFotoStatus.innerHTML;
+  const epEmailBaru = document.getElementById("ep-email-baru");
+  const epEmailMsg = document.getElementById("ep-email-msg");
+  const btnKirimVerifikasi = document.getElementById("btn-kirim-verifikasi");
+  let epFotoPreviewToken = 0;
+
+  function previewEpFoto(url) {
+    url = (url || "").trim();
+    const myToken = ++epFotoPreviewToken;
+    if (!url) {
+      epFotoPreview.className = "foto-preview is-empty";
+      epFotoPreview.innerHTML = "🧑";
+      epFotoStatus.innerHTML = epFotoStatusDefault;
+      epFotoStatus.className = "foto-upload-status";
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      if (myToken !== epFotoPreviewToken) return;
+      epFotoPreview.className = "foto-preview";
+      epFotoPreview.innerHTML = `<img src="${url}" alt="Preview foto" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+      epFotoStatus.textContent = "Gambar berhasil dimuat ✓";
+      epFotoStatus.className = "foto-upload-status ok";
+    };
+    img.onerror = () => {
+      if (myToken !== epFotoPreviewToken) return;
+      epFotoPreview.className = "foto-preview is-empty";
+      epFotoPreview.innerHTML = "🧑";
+      epFotoStatus.textContent = "Link gambar tidak bisa dimuat. Pastikan itu bagian src dari kode \"HTML full linked\" ImgBB.";
+      epFotoStatus.className = "foto-upload-status err";
+    };
+    img.src = url;
+  }
+
+  let epInitial = { nama: "", kontak: "", alamat: "", fotoUrl: "" };
+  const btnSubmitEp = document.getElementById("btn-submit-ep");
+
+  function checkEpDirty() {
+    const isDirty =
+      document.getElementById("ep-nama").value.trim() !== epInitial.nama ||
+      document.getElementById("ep-kontak").value.trim() !== epInitial.kontak ||
+      document.getElementById("ep-alamat").value.trim() !== epInitial.alamat ||
+      epFotoLink.value.trim() !== epInitial.fotoUrl;
+    btnSubmitEp.disabled = !isDirty;
+  }
+
+  document.getElementById("btn-open-edit-profil").addEventListener("click", () => {
+    epForm.reset();
+    epMsg.textContent = "";
+    epMsg.className = "form-msg";
+    epEmailMsg.textContent = "";
+    epEmailMsg.className = "email-verif-msg";
+    epEmailBaru.value = "";
+
+    document.getElementById("ep-nama").value = me.name || "";
+    document.getElementById("ep-kontak").value = me.phone || "";
+    document.getElementById("ep-alamat").value = me.alamat || "";
+    epFotoLink.value = me.fotoUrl || "";
+    previewEpFoto(me.fotoUrl || "");
+
+    epInitial = {
+      nama: me.name || "",
+      kontak: me.phone || "",
+      alamat: me.alamat || "",
+      fotoUrl: me.fotoUrl || "",
+    };
+    btnSubmitEp.disabled = true;
+
+    epModal.classList.add("open");
+  });
+  document.getElementById("btn-cancel-ep").addEventListener("click", () => epModal.classList.remove("open"));
+  epModal.addEventListener("click", (e) => { if (e.target === epModal) epModal.classList.remove("open"); });
+
+  ["ep-nama", "ep-kontak", "ep-alamat"].forEach((id) => {
+    document.getElementById(id).addEventListener("input", checkEpDirty);
+  });
+  epFotoLink.addEventListener("input", checkEpDirty);
+  epFotoLink.addEventListener("blur", () => previewEpFoto(epFotoLink.value));
+
+  epForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    epMsg.textContent = "";
+    epMsg.className = "form-msg";
+
+    const nama = document.getElementById("ep-nama").value.trim();
+    const kontak = document.getElementById("ep-kontak").value.trim();
+    const alamat = document.getElementById("ep-alamat").value.trim();
+    const fotoUrl = epFotoLink.value.trim();
+
+    if (!nama || !kontak) {
+      epMsg.textContent = "Nama dan No. Kontak wajib diisi.";
+      epMsg.classList.add("err");
+      return;
+    }
+
+    const btn = document.getElementById("btn-submit-ep");
+    btn.disabled = true;
+    btn.textContent = "Menyimpan...";
+    try {
+      await updateMyProfile(me.uid, { nama, kontak, alamat, fotoUrl });
+
+      me.name = nama;
+      me.phone = kontak;
+      me.alamat = alamat;
+      me.fotoUrl = fotoUrl;
+      renderProfileInfo(me);
+
+      epInitial = { nama, kontak, alamat, fotoUrl };
+
+      epMsg.textContent = "Profil berhasil disimpan!";
+      epMsg.classList.add("ok");
+      setTimeout(() => epModal.classList.remove("open"), 1000);
+    } catch (err) {
+      console.error(err);
+      epMsg.textContent = "Gagal menyimpan: " + err.message;
+      epMsg.classList.add("err");
+      btn.disabled = false;
+    } finally {
+      btn.textContent = "Simpan";
+    }
+  });
+
+  btnKirimVerifikasi.addEventListener("click", async () => {
+    epEmailMsg.textContent = "";
+    epEmailMsg.className = "email-verif-msg";
+    const newEmail = epEmailBaru.value.trim();
+    if (!newEmail) {
+      epEmailMsg.textContent = "Isi dulu email barunya.";
+      epEmailMsg.classList.add("err");
+      return;
+    }
+    btnKirimVerifikasi.disabled = true;
+    btnKirimVerifikasi.textContent = "Mengirim...";
+    try {
+      await requestMyEmailChange(newEmail);
+      me.pendingEmail = newEmail;
+      renderProfileInfo(me);
+      epEmailMsg.textContent = `Link verifikasi terkirim ke ${newEmail}. Cek inbox (& folder spam) untuk menyelesaikan ganti email.`;
+      epEmailMsg.classList.add("ok");
+      epEmailBaru.value = "";
+    } catch (err) {
+      console.error(err);
+      let readable = err.message;
+      if (err.code === "auth/email-already-in-use") readable = "Email itu sudah dipakai akun lain.";
+      if (err.code === "auth/invalid-email") readable = "Format email tidak valid.";
+      if (err.code === "auth/requires-recent-login") readable = "Demi keamanan, silakan logout & login ulang dulu sebelum ganti email.";
+      epEmailMsg.textContent = "Gagal: " + readable;
+      epEmailMsg.classList.add("err");
+    } finally {
+      btnKirimVerifikasi.disabled = false;
+      btnKirimVerifikasi.textContent = "Kirim Verifikasi";
+    }
+  });
+
+  const modal = document.getElementById("modal-ganti-pw");
+  const pwForm = document.getElementById("form-ganti-pw");
+  const pwMsg = document.getElementById("pw-msg");
+
+  document.getElementById("btn-open-ganti-pw").addEventListener("click", () => {
+    pwForm.reset();
+    pwMsg.textContent = "";
+    pwMsg.className = "form-msg";
+    modal.querySelectorAll(".pw-toggle").forEach((btn) => {
+      btn.classList.remove("is-revealed");
+      const input = document.getElementById(btn.dataset.target);
+      if (input) input.type = "password";
+    });
+    modal.classList.add("open");
+  });
+  document.getElementById("btn-cancel-pw").addEventListener("click", () => modal.classList.remove("open"));
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+
+  modal.querySelectorAll(".pw-toggle").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const revealed = btn.classList.toggle("is-revealed");
+      input.type = revealed ? "text" : "password";
+      btn.setAttribute("aria-label", revealed ? "Sembunyikan password" : "Tampilkan password");
+    });
+  });
+
+  pwForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    pwMsg.textContent = "";
+    pwMsg.className = "form-msg";
+
+    const lama = document.getElementById("pw-lama").value;
+    const baru = document.getElementById("pw-baru").value;
+    const ulang = document.getElementById("pw-baru-ulang").value;
+
+    if (baru !== ulang) {
+      pwMsg.textContent = "Password baru tidak cocok.";
+      pwMsg.classList.add("err");
+      return;
+    }
+
+    const btn = document.getElementById("btn-submit-pw");
+    btn.disabled = true;
+    btn.textContent = "Menyimpan...";
+    try {
+      await changeMyPassword(lama, baru);
+      pwMsg.textContent = "Password berhasil diganti!";
+      pwMsg.classList.add("ok");
+      setTimeout(() => modal.classList.remove("open"), 1200);
+    } catch (err) {
+      console.error(err);
+      let readable = err.message;
+      if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") readable = "Password lama salah.";
+      if (err.code === "auth/weak-password") readable = "Password baru terlalu lemah.";
+      pwMsg.textContent = "Gagal: " + readable;
+      pwMsg.classList.add("err");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Simpan";
+    }
+  });
+</script>
+</body>
+</html>

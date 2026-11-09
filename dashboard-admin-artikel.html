@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+<title>Artikel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" />
+<style>
+  body {
+    background: radial-gradient(circle at 8% 12%, #efeafe 0%, transparent 42%),
+                radial-gradient(circle at 95% 85%, #dff6f0 0%, transparent 45%),
+                linear-gradient(160deg, #f3f1fd 0%, #eef4fc 55%, #eaf5fd 100%);
+    min-height: 100vh;
+    padding: 26px;
+  }
+
+  .app-shell {
+    max-width: 1520px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+    display: flex;
+    overflow: hidden;
+    min-height: calc(100vh - 52px);
+  }
+
+  .sidebar {
+    width: 260px;
+    flex: none;
+    background: var(--purple-900);
+    color: #fff;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar .brand { display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 40px; padding: 0 8px; }
+  .sidebar .brand-mark { width: 76px; height: 76px; object-fit: contain; flex: none; }
+
+  .nav-group { display: flex; flex-direction: column; gap: 6px; }
+  .sidebar nav a, .sidebar nav button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; color: rgba(255,255,255,.68); font-family: inherit; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s;
+    background: transparent; border: none;
+  }
+  .sidebar nav a:hover, .sidebar nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar nav a.active { background: #fff; color: var(--purple-700); font-weight: 700; box-shadow: 0 8px 18px rgba(28,15,64,.18); }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .nav-bottom { border-top: 1px solid rgba(255,255,255,.12); padding-top: 16px; margin-top: 16px; }
+  .sidebar .nav-bottom button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .15s, color .15s;
+    background: transparent; border: none; color: #ffb9a8;
+  }
+  .sidebar .nav-bottom button:hover { background: rgba(224,86,58,.18); color: #fff; }
+
+  .sidebar-toggle {
+    display: none; flex: none; width: 40px; height: 40px; align-items: center; justify-content: center;
+    background: #fff; border: 1.5px solid #f0eefb; border-radius: 12px; font-size: 19px; color: var(--purple-700);
+    cursor: pointer; box-shadow: var(--shadow-card);
+  }
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(20, 12, 40, .45); z-index: 999;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .main-content { flex: 1; padding: 32px 34px; min-width: 0; }
+  .main-topbar h1 { font-size: 23px; color: var(--ink); }
+  .main-topbar .sub { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+
+  .card { background: #fff; border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 24px; margin: 24px 0 20px; }
+
+  .card-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .btn-refresh {
+    display: inline-flex; align-items: center; gap: 6px; flex: none; white-space: nowrap;
+    background: var(--purple-100); color: var(--purple-700); font-size: 12.5px; font-weight: 700;
+    padding: 8px 14px; border-radius: var(--radius-pill); border: none; cursor: pointer;
+  }
+  .btn-refresh:hover { background: var(--purple-600); color: #fff; }
+  .btn-refresh:disabled { opacity: .6; cursor: default; }
+  .btn-refresh-icon { display: inline-block; transition: transform .5s ease; }
+  .btn-refresh.is-spinning .btn-refresh-icon { animation: btn-refresh-spin .6s linear infinite; }
+  @keyframes btn-refresh-spin { to { transform: rotate(360deg); } }
+
+  .card h3 { font-size: 16px; margin-bottom: 4px; }
+  .card .card-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field input[type="text"], .field textarea {
+    width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid #ddd9f7;
+    font-family: inherit; font-size: 14px; background: var(--sky);
+  }
+  .field textarea { resize: vertical; line-height: 1.6; }
+  .field .hint { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+  .field input[type="checkbox"] { width: auto; accent-color: var(--purple-600); margin-right: 6px; }
+
+  #editor-isi-wrap .ql-toolbar { border-radius: var(--radius-sm) var(--radius-sm) 0 0; border-color: #ddd9f7; background: var(--sky); }
+  #editor-isi-wrap .ql-container { border-radius: 0 0 var(--radius-sm) var(--radius-sm); border-color: #ddd9f7; font-family: inherit; font-size: 14px; }
+  #editor-isi-wrap .ql-editor { min-height: 260px; line-height: 1.7; }
+  #editor-isi-wrap .ql-editor img { max-width: 100%; border-radius: 8px; margin: 6px 0; }
+  #editor-isi-wrap .ql-editor.ql-blank::before { color: var(--ink-soft); font-style: normal; }
+
+  .cover-preview { width: 220px; max-width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-sm); background: var(--purple-100); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 10px; color: var(--purple-700); font-size: 12px; text-align: center; }
+  .cover-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .upload-progress { font-size: 12px; color: var(--purple-700); margin-top: 6px; }
+  .upload-progress.err-text { color: var(--coral-600); }
+
+  .form-actions { margin-top: 20px; display: flex; align-items: center; gap: 14px; }
+  .form-msg { font-size: 13px; font-weight: 600; }
+  .form-msg.ok { color: var(--teal-700); }
+  .form-msg.err { color: var(--coral-600); }
+  .btn-cancel-edit { background: #eee; color: var(--ink-soft); font-size: 13px; font-weight: 700; padding: 12px 20px; border-radius: var(--radius-pill); }
+
+  .article-row { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f0eefb; align-items: center; }
+  .article-row:last-child { border-bottom: none; }
+  .article-row .thumb { width: 72px; height: 54px; border-radius: 8px; object-fit: cover; background: var(--purple-100); flex: none; }
+  .article-row .info { flex: 1; min-width: 0; }
+  .article-row .info h4 { font-size: 14px; margin-bottom: 3px; }
+  .article-row .info .row-date { font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
+  .article-row .info p { font-size: 12px; color: var(--ink-soft); }
+  .status-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); }
+  .status-pill.on { background: #d9f5ec; color: var(--teal-700); }
+  .status-pill.off { background: #f0eefb; color: var(--ink-soft); }
+  .row-actions { display: flex; gap: 8px; flex: none; }
+  .row-actions button { font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: var(--radius-pill); }
+  .btn-edit { background: var(--purple-100); color: var(--purple-700); }
+  .btn-edit:hover { background: var(--purple-600); color: #fff; }
+  .btn-delete { background: #fde9ea; color: var(--coral-600); }
+  .btn-delete:hover { background: var(--coral-600); color: #fff; }
+  .empty-note { text-align: center; color: var(--ink-soft); padding: 24px; font-size: 13px; }
+
+  @media (max-width: 1080px) {
+    body { padding: 0; }
+    .app-shell { border-radius: 0; min-height: 100vh; }
+    .sidebar-toggle { display: flex; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 260px; max-width: 80vw;
+      transform: translateX(-100%); transition: transform .25s ease; z-index: 1000; box-shadow: 0 0 0 transparent;
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 12px 0 32px rgba(20,12,40,.25); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a href="/dashboard-admin" class="brand"><img src="assets/images/logo.png" alt="KidsPodu" class="brand-mark"></a>
+
+    <nav class="nav-group">
+      <a href="/dashboard-admin">Dashboard</a>
+      <a href="/dashboard-admin-pendaftaran">Pendaftaran</a>
+      <a href="/dashboard-admin-laporan">Laporan</a>
+      <a href="/dashboard-admin-absensi">Absensi</a>
+      <a href="/dashboard-admin-artikel" class="active">Artikel</a>
+      <a href="/dashboard-admin-testimoni">Testimoni</a>
+      <a href="/dashboard-admin-team">Tim</a>
+      <a href="/dashboard-admin-sosmed">Sosmed</a>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="nav-bottom">
+      <button type="button" id="logout-btn">Keluar</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main-content">
+    <div class="main-topbar">
+      <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Buka menu">☰</button>
+      <div>
+        <h1>Artikel</h1>
+        <p class="sub" id="who-am-i">Memuat...</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="form-title">Tulis Artikel Baru</h3>
+
+      <form id="form-artikel">
+        <div class="field">
+          <label>Judul Artikel</label>
+          <input type="text" id="f-judul" required placeholder="Contoh: Keseruan Renang Bersama Anak-Anak KidsPodu" />
+        </div>
+
+        <div class="field">
+          <label>Gambar Cover</label>
+          <div class="cover-preview" id="cover-preview"><span>Belum ada gambar</span></div>
+          <input type="text" id="f-cover" placeholder="https://i.ibb.co/xxxxx/nama-file.jpg" />
+          <p class="hint" id="cover-hint">
+            Cara dapetin link gambar: buka <strong>imgbb.com</strong> (tidak perlu bikin akun) →
+            upload/drag foto ke sana → centang <strong>"Don't autodelete"</strong> → setelah
+            selesai, di kolom Embed codes pilih <strong>"HTML full linked"</strong> → dari kode
+            yang muncul, salin (copy) cuma bagian di dalam <strong>src="..."</strong> → tempel
+            (paste) ke kotak ini.
+          </p>
+          <p class="upload-progress" id="upload-progress"></p>
+        </div>
+
+        <div class="field" id="editor-isi-wrap">
+          <label>Isi Artikel</label>
+          <div id="editor-isi"></div>
+          <p class="hint">
+            Pakai toolbar di atas untuk bold, italic, heading, list, dsb. Untuk sisip gambar di dalam
+            artikel, klik ikon gambar di toolbar lalu tempel <strong>link src dari kode "HTML full linked" imgbb.com</strong>
+            (bisa dipakai berkali kali, dan gambarnya bisa diletakkan di mana saja dalam teks).
+          </p>
+        </div>
+
+        <div class="field">
+          <label><input type="checkbox" id="f-published" checked /> Publikasikan sekarang</label>
+          <p class="hint">Kalau dicentang, artikel langsung tampil di website. Kalau tidak, tersimpan sebagai draft (belum tampil).</p>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="btn-submit-artikel">Simpan Artikel</button>
+          <button type="button" class="btn-cancel-edit" id="btn-cancel-edit" hidden>Batal Edit</button>
+          <span class="form-msg" id="msg-artikel"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header-row">
+        <div>
+          <h3>Semua Artikel</h3>
+          <p class="card-sub">Urut dari yang paling baru.</p>
+        </div>
+        <button type="button" class="btn-refresh" id="btn-refresh-artikel" title="Muat ulang daftar artikel">
+          <span class="btn-refresh-icon">⟳</span> Refresh
+        </button>
+      </div>
+      <div id="article-list"><p class="empty-note">Memuat data...</p></div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.js"></script>
+<script type="module">
+  import { guardDashboard, wireLogout } from "./js/auth-guard.js";
+  import {
+    addArtikel,
+    updateArtikel,
+    deleteArtikel,
+    listArtikelAdmin,
+  } from "./js/article-service.js";
+
+  guardDashboard("admin", (userData) => {
+    document.getElementById("who-am-i").textContent =
+      `Masuk sebagai ${userData.name || userData.email} · Admin`;
+  });
+
+  wireLogout("#logout-btn");
+
+  const sidebarEl = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  function openSidebar() { sidebarEl.classList.add("open"); sidebarOverlay.classList.add("open"); }
+  function closeSidebar() { sidebarEl.classList.remove("open"); sidebarOverlay.classList.remove("open"); }
+  sidebarToggle.addEventListener("click", () => {
+    sidebarEl.classList.contains("open") ? closeSidebar() : openSidebar();
+  });
+  sidebarOverlay.addEventListener("click", closeSidebar);
+  sidebarEl.querySelectorAll("a, button").forEach((el) => el.addEventListener("click", closeSidebar));
+
+  const quill = new Quill("#editor-isi", {
+    theme: "snow",
+    placeholder: "Tulis isi artikelnya di sini...",
+    modules: {
+      toolbar: {
+        container: [
+          [{ header: [2, 3, false] }],
+          ["bold", "italic", "underline"],
+          [{ list: "ordered" }, { list: "bullet" }],
+          ["blockquote", "link", "image"],
+          ["clean"],
+        ],
+        handlers: {
+          image: function () {
+            const url = window.prompt(
+              "Tempel link gambar (src dari kode \"HTML full linked\" imgbb.com):"
+            );
+            if (!url) return;
+            const range = this.quill.getSelection(true);
+            this.quill.insertEmbed(range.index, "image", url.trim(), "user");
+            this.quill.setSelection(range.index + 1);
+          },
+        },
+      },
+    },
+  });
+
+  const form = document.getElementById("form-artikel");
+  const msg = document.getElementById("msg-artikel");
+  const submitBtn = document.getElementById("btn-submit-artikel");
+  const cancelBtn = document.getElementById("btn-cancel-edit");
+  const formTitle = document.getElementById("form-title");
+  const coverInput = document.getElementById("f-cover");
+  const coverPreview = document.getElementById("cover-preview");
+  const uploadProgress = document.getElementById("upload-progress");
+  const listWrap = document.getElementById("article-list");
+
+  let editingId = null;
+  let previewToken = 0;
+
+  function previewCoverUrl(url) {
+    url = (url || "").trim();
+    const myToken = ++previewToken;
+
+    if (!url) {
+      coverPreview.innerHTML = "<span>Belum ada gambar</span>";
+      uploadProgress.textContent = "";
+      uploadProgress.classList.remove("err-text");
+      return;
+    }
+    uploadProgress.textContent = "Memuat preview...";
+    uploadProgress.classList.remove("err-text");
+    const img = new Image();
+    img.onload = () => {
+      if (myToken !== previewToken) return;
+      coverPreview.innerHTML = `<img src="${url}" alt="Preview cover" />`;
+      uploadProgress.textContent = "Gambar berhasil dimuat ✓";
+      uploadProgress.classList.remove("err-text");
+    };
+    img.onerror = () => {
+      if (myToken !== previewToken) return;
+      coverPreview.innerHTML = "<span>Link gambar tidak bisa dimuat</span>";
+      uploadProgress.textContent = "Gagal memuat gambar. Pastikan linknya itu bagian src dari kode \"HTML full linked\" dari ImgBB (biasanya diakhiri .jpg/.png/.gif), lalu coba lagi.";
+      uploadProgress.classList.add("err-text");
+    };
+    img.src = url;
+  }
+
+  coverInput.addEventListener("blur", () => previewCoverUrl(coverInput.value));
+
+  function resetForm() {
+    editingId = null;
+    form.reset();
+    quill.setContents([]);
+    document.getElementById("f-published").checked = true;
+    coverPreview.innerHTML = "<span>Belum ada gambar</span>";
+    uploadProgress.textContent = "";
+    formTitle.textContent = "Tulis Artikel Baru";
+    submitBtn.textContent = "Simpan Artikel";
+    cancelBtn.hidden = true;
+  }
+
+  cancelBtn.addEventListener("click", resetForm);
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function legacyContentToHtml(content) {
+    content = content || "";
+    const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(content);
+    if (looksLikeHtml) return content;
+    return content
+      .split(/\n\s*\n/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+      .join("");
+  }
+
+  function formatTanggal(ts) {
+    if (!ts || !ts.toDate) return "";
+    const d = ts.toDate();
+    const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    const jam = String(d.getHours()).padStart(2, "0");
+    const menit = String(d.getMinutes()).padStart(2, "0");
+    return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()} ${jam}.${menit}`;
+  }
+
+  async function renderList() {
+    const articles = await listArtikelAdmin();
+    if (!articles.length) {
+      listWrap.innerHTML = '<p class="empty-note">Belum ada artikel. Tulis yang pertama lewat form di atas.</p>';
+      return;
+    }
+    listWrap.innerHTML = articles.map((a) => `
+      <div class="article-row" data-id="${a.id}">
+        ${a.coverImageUrl
+          ? `<img class="thumb" src="${a.coverImageUrl}" alt="" />`
+          : `<div class="thumb" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--purple-700);">Tanpa foto</div>`}
+        <div class="info">
+          <h4>${a.title}</h4>
+          <p class="row-date">${formatTanggal(a.createdAt)}</p>
+          <p><span class="status-pill ${a.published ? "on" : "off"}">${a.published ? "Tayang" : "Draft"}</span></p>
+        </div>
+        <div class="row-actions">
+          <button class="btn-edit" data-action="edit">Edit</button>
+          <button class="btn-delete" data-action="delete">Hapus</button>
+        </div>
+      </div>
+    `).join("");
+
+    listWrap.querySelectorAll(".article-row").forEach((row) => {
+      const id = row.dataset.id;
+      const a = articles.find((x) => x.id === id);
+
+      row.querySelector('[data-action="edit"]').addEventListener("click", () => {
+        editingId = id;
+        document.getElementById("f-judul").value = a.title || "";
+        quill.setContents([]);
+        quill.clipboard.dangerouslyPasteHTML(legacyContentToHtml(a.content));
+        document.getElementById("f-published").checked = a.published !== false;
+        coverInput.value = a.coverImageUrl || "";
+        previewCoverUrl(a.coverImageUrl || "");
+        formTitle.textContent = "Edit Artikel";
+        submitBtn.textContent = "Simpan Perubahan";
+        cancelBtn.hidden = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      row.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+        if (!confirm(`Hapus artikel "${a.title}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+        try {
+          await deleteArtikel(id);
+          if (editingId === id) resetForm();
+          renderList();
+        } catch (err) {
+          alert("Gagal menghapus: " + err.message);
+        }
+      });
+    });
+  }
+
+  renderList();
+
+  const btnRefreshArtikel = document.getElementById("btn-refresh-artikel");
+  btnRefreshArtikel.addEventListener("click", async () => {
+    btnRefreshArtikel.disabled = true;
+    btnRefreshArtikel.classList.add("is-spinning");
+    try {
+      await renderList();
+    } finally {
+      btnRefreshArtikel.disabled = false;
+      btnRefreshArtikel.classList.remove("is-spinning");
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+    msg.className = "form-msg";
+
+    const title = document.getElementById("f-judul").value.trim();
+    const content = quill.root.innerHTML.trim();
+    const isEmpty = quill.getText().trim().length === 0;
+    const published = document.getElementById("f-published").checked;
+    const coverImageUrl = coverInput.value.trim();
+
+    if (!title || isEmpty) {
+      msg.textContent = "Judul dan isi artikel wajib diisi.";
+      msg.classList.add("err");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = editingId ? "Menyimpan..." : "Menyimpan...";
+    try {
+      if (editingId) {
+        await updateArtikel(editingId, { title, content, coverImageUrl, published });
+        msg.textContent = "Perubahan disimpan!";
+      } else {
+        await addArtikel({ title, content, coverImageUrl, published });
+        msg.textContent = "Artikel berhasil disimpan!";
+      }
+      msg.classList.add("ok");
+      resetForm();
+      renderList();
+    } catch (err) {
+      console.error(err);
+      msg.textContent = "Gagal menyimpan: " + err.message;
+      msg.classList.add("err");
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

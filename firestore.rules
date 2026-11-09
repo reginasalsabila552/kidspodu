@@ -1,0 +1,107 @@
+rules_version = '2';
+
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function myRole() {
+      return isSignedIn()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function isAdmin() {
+      return myRole() == "admin";
+    }
+
+    function isSelfProfileUpdate() {
+      let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      let allowedKeys = ['name','phone','alamat','fotoUrl','pendingEmail','updatedAt','email','status'];
+      let roleUnchanged = request.resource.data.role == resource.data.role;
+      let statusOk = request.resource.data.status == resource.data.status
+        || (resource.data.status == "menunggu_verifikasi" && request.resource.data.status == "aktif");
+      let emailOk = !changedKeys.hasAny(['email']) || request.resource.data.email == request.auth.token.email;
+      return changedKeys.hasOnly(allowedKeys) && roleUnchanged && statusOk && emailOk;
+    }
+
+    match /programs/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /team/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /founder/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /stats/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /testimonials/{docId} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /articles/{docId} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /sosmed_posts/{docId} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /stats_public/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /program_templates/{programId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /anak/{childId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == uid && isSelfProfileUpdate());
+      allow delete: if isAdmin();
+    }
+
+    function isOwnReportUpdate() {
+      let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      let allowedKeys = ['tipe','tanggal','laporanUmum','fotoUrls','anakIds','anakList','updatedAt'];
+      let identityUnchanged = request.resource.data.pelatihUid == resource.data.pelatihUid
+        && request.resource.data.programId == resource.data.programId
+        && request.resource.data.subProgram == resource.data.subProgram
+        && request.resource.data.programTitle == resource.data.programTitle
+        && request.resource.data.pelatihNama == resource.data.pelatihNama;
+      return changedKeys.hasOnly(allowedKeys) && identityUnchanged;
+    }
+
+    match /session_reports/{reportId} {
+      allow read: if isSignedIn() && (isAdmin() || resource.data.pelatihUid == request.auth.uid);
+      allow create: if isSignedIn() && myRole() == "pelatih" && request.resource.data.pelatihUid == request.auth.uid;
+      allow update: if isSignedIn() && (isAdmin() || (resource.data.pelatihUid == request.auth.uid && isOwnReportUpdate()));
+      allow delete: if isSignedIn() && (isAdmin() || resource.data.pelatihUid == request.auth.uid);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+<title>Tim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body {
+    background: radial-gradient(circle at 8% 12%, #efeafe 0%, transparent 42%),
+                radial-gradient(circle at 95% 85%, #dff6f0 0%, transparent 45%),
+                linear-gradient(160deg, #f3f1fd 0%, #eef4fc 55%, #eaf5fd 100%);
+    min-height: 100vh;
+    padding: 26px;
+  }
+
+  .app-shell {
+    max-width: 1520px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+    display: flex;
+    overflow: hidden;
+    min-height: calc(100vh - 52px);
+  }
+
+  .sidebar {
+    width: 260px;
+    flex: none;
+    background: var(--purple-900);
+    color: #fff;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar .brand { display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 40px; padding: 0 8px; }
+  .sidebar .brand-mark { width: 76px; height: 76px; object-fit: contain; flex: none; }
+
+  .nav-group { display: flex; flex-direction: column; gap: 6px; }
+  .sidebar nav a, .sidebar nav button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; color: rgba(255,255,255,.68); font-family: inherit; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s;
+    background: transparent; border: none;
+  }
+  .sidebar nav a:hover, .sidebar nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar nav a.active { background: #fff; color: var(--purple-700); font-weight: 700; box-shadow: 0 8px 18px rgba(28,15,64,.18); }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .nav-bottom { border-top: 1px solid rgba(255,255,255,.12); padding-top: 16px; margin-top: 16px; }
+  .sidebar .nav-bottom button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .15s, color .15s;
+    background: transparent; border: none; color: #ffb9a8;
+  }
+  .sidebar .nav-bottom button:hover { background: rgba(224,86,58,.18); color: #fff; }
+
+  .sidebar-toggle {
+    display: none; flex: none; width: 40px; height: 40px; align-items: center; justify-content: center;
+    background: #fff; border: 1.5px solid #f0eefb; border-radius: 12px; font-size: 19px; color: var(--purple-700);
+    cursor: pointer; box-shadow: var(--shadow-card);
+  }
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(20, 12, 40, .45); z-index: 999;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .main-content { flex: 1; padding: 32px 34px; min-width: 0; }
+  .main-topbar h1 { font-size: 23px; color: var(--ink); }
+  .main-topbar .sub { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+
+  .card { background: #fff; border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 24px; margin: 24px 0 20px; }
+  .card h3 { font-size: 16px; margin-bottom: 4px; }
+  .card .card-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field input[type="text"], .field textarea {
+    width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid #ddd9f7;
+    font-family: inherit; font-size: 14px; background: var(--sky);
+  }
+  .field textarea { resize: vertical; line-height: 1.6; }
+  .field .hint { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+  .cover-preview { width: 90px; height: 90px; border-radius: 50%; background: var(--purple-100); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 10px; color: var(--purple-700); font-size: 11px; text-align: center; }
+  .cover-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .upload-progress { font-size: 12px; color: var(--purple-700); margin-top: 6px; }
+  .upload-progress.err-text { color: var(--coral-600); }
+
+  .form-actions { margin-top: 20px; display: flex; align-items: center; gap: 14px; }
+  .form-msg { font-size: 13px; font-weight: 600; }
+  .form-msg.ok { color: var(--teal-700); }
+  .form-msg.err { color: var(--coral-600); }
+  .btn-cancel-edit { background: #eee; color: var(--ink-soft); font-size: 13px; font-weight: 700; padding: 12px 20px; border-radius: var(--radius-pill); }
+
+  .article-row { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f0eefb; align-items: center; }
+  .article-row:last-child { border-bottom: none; }
+  .article-row .thumb { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: var(--purple-100); flex: none; }
+  .article-row .info { flex: 1; min-width: 0; }
+  .article-row .info h4 { font-size: 14px; margin-bottom: 3px; }
+  .row-actions { display: flex; gap: 8px; flex: none; }
+  .row-actions button { font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: var(--radius-pill); }
+  .btn-edit { background: var(--purple-100); color: var(--purple-700); }
+  .btn-edit:hover { background: var(--purple-600); color: #fff; }
+  .btn-delete { background: #fde9ea; color: var(--coral-600); }
+  .btn-delete:hover { background: var(--coral-600); color: #fff; }
+  .btn-move { background: #f0eefb; color: var(--purple-700); font-size: 13px; padding: 7px 10px; }
+  .btn-move:hover { background: var(--purple-600); color: #fff; }
+  .btn-move:disabled { opacity: .35; cursor: default; background: #f0eefb; color: var(--purple-700); }
+  .empty-note { text-align: center; color: var(--ink-soft); padding: 24px; font-size: 13px; }
+
+  @media (max-width: 1080px) {
+    body { padding: 0; }
+    .app-shell { border-radius: 0; min-height: 100vh; }
+    .sidebar-toggle { display: flex; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 260px; max-width: 80vw;
+      transform: translateX(-100%); transition: transform .25s ease; z-index: 1000; box-shadow: 0 0 0 transparent;
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 12px 0 32px rgba(20,12,40,.25); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a href="/dashboard-admin" class="brand"><img src="assets/images/logo.png" alt="KidsPodu" class="brand-mark"></a>
+
+    <nav class="nav-group">
+      <a href="/dashboard-admin">Dashboard</a>
+      <a href="/dashboard-admin-pendaftaran">Pendaftaran</a>
+      <a href="/dashboard-admin-laporan">Laporan</a>
+      <a href="/dashboard-admin-absensi">Absensi</a>
+      <a href="/dashboard-admin-artikel">Artikel</a>
+      <a href="/dashboard-admin-testimoni">Testimoni</a>
+      <a href="/dashboard-admin-team" class="active">Tim</a>
+      <a href="/dashboard-admin-sosmed">Sosmed</a>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="nav-bottom">
+      <button type="button" id="logout-btn">Keluar</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main-content">
+    <div class="main-topbar">
+      <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Buka menu">☰</button>
+      <div>
+        <h1>Tim</h1>
+        <p class="sub" id="who-am-i">Memuat...</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Profil Founder</h3>
+
+      <form id="form-founder">
+        <div class="field">
+          <label>Foto Bersama (opsional)</label>
+          <div class="cover-preview" id="founder-preview"><span>Belum ada foto</span></div>
+          <input type="text" id="f-founder-foto" placeholder="https://i.ibb.co/xxxxx/nama-file.jpg" />
+          <p class="hint">
+            Cara dapetin link foto: buka <strong>imgbb.com</strong> (tidak perlu bikin akun) →
+            upload/drag foto ke sana → centang <strong>"Don't autodelete"</strong> → di kolom
+            Embed codes pilih <strong>"HTML full linked"</strong> → dari kode yang muncul,
+            salin (copy) cuma bagian di dalam <strong>src="..."</strong> → tempel ke kotak ini.
+            Kalau dikosongkan, tampil placeholder biasa.
+          </p>
+          <p class="upload-progress" id="founder-upload-progress"></p>
+        </div>
+
+        <div class="field">
+          <label>Nama Founder 1</label>
+          <input type="text" id="f-founder-nama1" required placeholder="Contoh: Dr. Regina Andini, M.Psi, Psikolog" />
+        </div>
+
+        <div class="field">
+          <label>Nama Founder 2</label>
+          <input type="text" id="f-founder-nama2" required placeholder="Contoh: Dr. Budi Santoso, M.Psi, Psikolog" />
+        </div>
+
+        <div class="field">
+          <label>Kata-kata Founder (motto/kutipan)</label>
+          <textarea id="f-founder-quote" rows="3" required placeholder="Tidak ada anak yang gagal belajar, yang ada hanya pendekatan yang belum tepat."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="btn-submit-founder">Simpan Profil Founder</button>
+          <span class="form-msg" id="msg-founder"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 id="form-title">Tambah Anggota Tim</h3>
+
+      <form id="form-team">
+        <div class="field">
+          <label>Foto (opsional)</label>
+          <div class="cover-preview" id="member-preview"><span>Belum ada foto</span></div>
+          <input type="text" id="f-member-foto" placeholder="https://i.ibb.co/xxxxx/nama-file.jpg" />
+          <p class="hint">
+            Cara dapetin link foto: buka <strong>imgbb.com</strong> (tidak perlu bikin akun) →
+            upload/drag foto ke sana → centang <strong>"Don't autodelete"</strong> → di kolom
+            Embed codes pilih <strong>"HTML full linked"</strong> → dari kode yang muncul,
+            salin (copy) cuma bagian di dalam <strong>src="..."</strong> → tempel ke kotak ini.
+            Kalau dikosongkan, tampil placeholder biasa.
+          </p>
+          <p class="upload-progress" id="member-upload-progress"></p>
+        </div>
+
+        <div class="field">
+          <label>Nama</label>
+          <input type="text" id="f-member-nama" required placeholder="Contoh: Vino" />
+        </div>
+
+        <div class="field">
+          <label>Role / Jabatan (opsional)</label>
+          <input type="text" id="f-member-role" placeholder="Contoh: Karate Coach & Swim Coach" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="btn-submit-team">Simpan Anggota</button>
+          <button type="button" class="btn-cancel-edit" id="btn-cancel-edit" hidden>Batal Edit</button>
+          <span class="form-msg" id="msg-team"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Semua Anggota Tim</h3>
+      <p class="card-sub">Urutan ini yang dipakai di halaman depan — pakai tombol ↑↓ untuk mengatur urutan.</p>
+      <div id="team-list"><p class="empty-note">Memuat data...</p></div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { guardDashboard, wireLogout } from "./js/auth-guard.js";
+  import {
+    getFounderAdmin,
+    setFounder,
+    addTeamMember,
+    updateTeamMember,
+    deleteTeamMember,
+    listTeamAdmin,
+    swapTeamOrder,
+  } from "./js/team-service.js";
+
+  guardDashboard("admin", (userData) => {
+    document.getElementById("who-am-i").textContent =
+      `Masuk sebagai ${userData.name || userData.email} · Admin`;
+  });
+
+  wireLogout("#logout-btn");
+
+  const sidebarEl = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  function openSidebar() { sidebarEl.classList.add("open"); sidebarOverlay.classList.add("open"); }
+  function closeSidebar() { sidebarEl.classList.remove("open"); sidebarOverlay.classList.remove("open"); }
+  sidebarToggle.addEventListener("click", () => {
+    sidebarEl.classList.contains("open") ? closeSidebar() : openSidebar();
+  });
+  sidebarOverlay.addEventListener("click", closeSidebar);
+  sidebarEl.querySelectorAll("a, button").forEach((el) => el.addEventListener("click", closeSidebar));
+
+  function wireFotoPreview(inputEl, previewEl, progressEl) {
+    let previewToken = 0;
+    function previewFotoUrl(url) {
+      url = (url || "").trim();
+      const myToken = ++previewToken;
+      if (!url) {
+        previewEl.innerHTML = "<span>Belum ada foto</span>";
+        progressEl.textContent = "";
+        progressEl.classList.remove("err-text");
+        return;
+      }
+      progressEl.textContent = "Memuat preview...";
+      progressEl.classList.remove("err-text");
+      const img = new Image();
+      img.onload = () => {
+        if (myToken !== previewToken) return;
+        previewEl.innerHTML = `<img src="${url}" alt="Preview foto" />`;
+        progressEl.textContent = "Foto berhasil dimuat ✓";
+        progressEl.classList.remove("err-text");
+      };
+      img.onerror = () => {
+        if (myToken !== previewToken) return;
+        previewEl.innerHTML = "<span>Link foto tidak bisa dimuat</span>";
+        progressEl.textContent = "Gagal memuat foto. Pastikan linknya itu bagian src dari kode \"HTML full linked\" ImgBB (biasanya diakhiri .jpg/.png/.gif), lalu coba lagi.";
+        progressEl.classList.add("err-text");
+      };
+      img.src = url;
+    }
+    inputEl.addEventListener("blur", () => previewFotoUrl(inputEl.value));
+    return previewFotoUrl;
+  }
+
+  const founderForm = document.getElementById("form-founder");
+  const founderMsg = document.getElementById("msg-founder");
+  const founderFotoInput = document.getElementById("f-founder-foto");
+  const founderPreview = document.getElementById("founder-preview");
+  const founderProgress = document.getElementById("founder-upload-progress");
+  const previewFounderFoto = wireFotoPreview(founderFotoInput, founderPreview, founderProgress);
+
+  (async () => {
+    try {
+      const f = await getFounderAdmin();
+      if (f) {
+        document.getElementById("f-founder-nama1").value = f.name1 || "";
+        document.getElementById("f-founder-nama2").value = f.name2 || "";
+        document.getElementById("f-founder-quote").value = f.quote || "";
+        founderFotoInput.value = f.photoUrl || "";
+        previewFounderFoto(f.photoUrl || "");
+      }
+    } catch (err) {
+      console.error("Gagal memuat profil founder:", err);
+    }
+  })();
+
+  founderForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    founderMsg.textContent = "";
+    founderMsg.className = "form-msg";
+
+    const name1 = document.getElementById("f-founder-nama1").value.trim();
+    const name2 = document.getElementById("f-founder-nama2").value.trim();
+    const quote = document.getElementById("f-founder-quote").value.trim();
+    const photoUrl = founderFotoInput.value.trim();
+
+    if (!name1 || !name2 || !quote) {
+      founderMsg.textContent = "Nama founder 1, nama founder 2, dan kata-kata founder wajib diisi.";
+      founderMsg.classList.add("err");
+      return;
+    }
+
+    const btn = document.getElementById("btn-submit-founder");
+    btn.disabled = true;
+    btn.textContent = "Menyimpan...";
+    try {
+      await setFounder({ name1, name2, quote, photoUrl });
+      founderMsg.textContent = "Profil founder disimpan!";
+      founderMsg.classList.add("ok");
+    } catch (err) {
+      console.error(err);
+      founderMsg.textContent = "Gagal menyimpan: " + err.message;
+      founderMsg.classList.add("err");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Simpan Profil Founder";
+    }
+  });
+
+
+  const teamForm = document.getElementById("form-team");
+  const teamMsg = document.getElementById("msg-team");
+  const teamSubmitBtn = document.getElementById("btn-submit-team");
+  const teamCancelBtn = document.getElementById("btn-cancel-edit");
+  const teamFormTitle = document.getElementById("form-title");
+  const memberFotoInput = document.getElementById("f-member-foto");
+  const memberPreview = document.getElementById("member-preview");
+  const memberProgress = document.getElementById("member-upload-progress");
+  const teamListWrap = document.getElementById("team-list");
+  const previewMemberFoto = wireFotoPreview(memberFotoInput, memberPreview, memberProgress);
+
+  let editingId = null;
+
+  function resetTeamForm() {
+    editingId = null;
+    teamForm.reset();
+    memberPreview.innerHTML = "<span>Belum ada foto</span>";
+    memberProgress.textContent = "";
+    teamFormTitle.textContent = "Tambah Anggota Tim";
+    teamSubmitBtn.textContent = "Simpan Anggota";
+    teamCancelBtn.hidden = true;
+  }
+  teamCancelBtn.addEventListener("click", resetTeamForm);
+
+  async function renderTeamList() {
+    const items = await listTeamAdmin();
+    if (!items.length) {
+      teamListWrap.innerHTML = '<p class="empty-note">Belum ada anggota tim. Tambah yang pertama lewat form di atas.</p>';
+      return;
+    }
+    teamListWrap.innerHTML = items.map((m, idx) => `
+      <div class="article-row" data-id="${m.id}">
+        ${m.photoUrl
+          ? `<img class="thumb" src="${m.photoUrl}" alt="" />`
+          : `<div class="thumb" style="display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--purple-700);">Tanpa foto</div>`}
+        <div class="info">
+          <h4>${m.name}</h4>
+          ${m.role ? `<p style="font-size:12px;color:var(--ink-soft);margin:0;">${m.role}</p>` : ""}
+        </div>
+        <div class="row-actions">
+          <button class="btn-move" data-action="up" ${idx === 0 ? "disabled" : ""} title="Naikkan urutan">↑</button>
+          <button class="btn-move" data-action="down" ${idx === items.length - 1 ? "disabled" : ""} title="Turunkan urutan">↓</button>
+          <button class="btn-edit" data-action="edit">Edit</button>
+          <button class="btn-delete" data-action="delete">Hapus</button>
+        </div>
+      </div>
+    `).join("");
+
+    teamListWrap.querySelectorAll(".article-row").forEach((row) => {
+      const id = row.dataset.id;
+      const idx = items.findIndex((x) => x.id === id);
+      const m = items[idx];
+
+      const upBtn = row.querySelector('[data-action="up"]');
+      const downBtn = row.querySelector('[data-action="down"]');
+      if (upBtn && !upBtn.disabled) {
+        upBtn.addEventListener("click", async () => {
+          const neighbor = items[idx - 1];
+          try {
+            await swapTeamOrder(m.id, m.order, neighbor.id, neighbor.order);
+            renderTeamList();
+          } catch (err) {
+            alert("Gagal mengubah urutan: " + err.message);
+          }
+        });
+      }
+      if (downBtn && !downBtn.disabled) {
+        downBtn.addEventListener("click", async () => {
+          const neighbor = items[idx + 1];
+          try {
+            await swapTeamOrder(m.id, m.order, neighbor.id, neighbor.order);
+            renderTeamList();
+          } catch (err) {
+            alert("Gagal mengubah urutan: " + err.message);
+          }
+        });
+      }
+
+      row.querySelector('[data-action="edit"]').addEventListener("click", () => {
+        editingId = id;
+        document.getElementById("f-member-nama").value = m.name || "";
+        document.getElementById("f-member-role").value = m.role || "";
+        memberFotoInput.value = m.photoUrl || "";
+        previewMemberFoto(m.photoUrl || "");
+        teamFormTitle.textContent = "Edit Anggota Tim";
+        teamSubmitBtn.textContent = "Simpan Perubahan";
+        teamCancelBtn.hidden = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      row.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+        if (!confirm(`Hapus "${m.name}" dari daftar tim? Tindakan ini tidak bisa dibatalkan.`)) return;
+        try {
+          await deleteTeamMember(id);
+          if (editingId === id) resetTeamForm();
+          renderTeamList();
+        } catch (err) {
+          alert("Gagal menghapus: " + err.message);
+        }
+      });
+    });
+  }
+
+  renderTeamList();
+
+  teamForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    teamMsg.textContent = "";
+    teamMsg.className = "form-msg";
+
+    const name = document.getElementById("f-member-nama").value.trim();
+    const role = document.getElementById("f-member-role").value.trim();
+    const photoUrl = memberFotoInput.value.trim();
+
+    if (!name) {
+      teamMsg.textContent = "Nama wajib diisi.";
+      teamMsg.classList.add("err");
+      return;
+    }
+
+    teamSubmitBtn.disabled = true;
+    teamSubmitBtn.textContent = "Menyimpan...";
+    try {
+      if (editingId) {
+        await updateTeamMember(editingId, { name, role, photoUrl });
+        teamMsg.textContent = "Perubahan disimpan!";
+      } else {
+        await addTeamMember({ name, role, photoUrl });
+        teamMsg.textContent = "Anggota tim berhasil ditambahkan!";
+      }
+      teamMsg.classList.add("ok");
+      resetTeamForm();
+      renderTeamList();
+    } catch (err) {
+      console.error(err);
+      teamMsg.textContent = "Gagal menyimpan: " + err.message;
+      teamMsg.classList.add("err");
+    } finally {
+      teamSubmitBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

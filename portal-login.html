@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+<title>Portal KidsPodu Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body {
+    min-height: 100vh; display: flex; flex-direction: column;
+    background: var(--sky) url('assets/images/portal.png') center center / cover no-repeat fixed;
+  }
+  @media (max-width: 720px) {
+    body { background-attachment: scroll; }
+  }
+  .portal-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+  .portal-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop); padding: 40px; width: 100%; max-width: 380px; }
+  .portal-card .brand { justify-content: center; margin-bottom: 6px; }
+  .portal-card .brand-mark { width: 64px; height: 64px; margin: 0 auto; }
+  .portal-title { text-align: center; margin-bottom: 6px; font-size: 20px; }
+  .portal-sub { text-align: center; font-size: 13px; margin-bottom: 26px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 12px 14px; border-radius: var(--radius-sm); border: 1.5px solid #ddd9f7;
+    font-family: inherit; font-size: 14px; background: var(--sky);
+  }
+  .field input:focus { outline: none; border-color: var(--purple-400); background: #fff; }
+  .pw-field-wrap { position: relative; }
+  .pw-field-wrap input { padding-right: 42px; }
+  .pw-toggle {
+    position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-radius: 8px; color: var(--ink-soft); cursor: pointer;
+  }
+  .pw-toggle:hover { color: var(--purple-600); background: var(--purple-100); }
+  .pw-toggle svg { width: 18px; height: 18px; }
+  .pw-toggle .ic-eye-off { display: none; }
+  .pw-toggle.is-revealed .ic-eye { display: none; }
+  .pw-toggle.is-revealed .ic-eye-off { display: block; }
+  .portal-submit { width: 100%; justify-content: center; margin-top: 6px; }
+  .portal-note { font-size: 12px; color: var(--ink-soft); text-align: center; margin-top: 18px; }
+  .portal-error { display: none; background: var(--coral-100); color: var(--coral-600); font-size: 12px; padding: 10px 12px; border-radius: var(--radius-sm); margin-bottom: 14px; font-weight: 600; }
+  .back-home { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--purple-600); margin-bottom: 18px; }
+</style>
+</head>
+<body>
+
+<div class="portal-wrap">
+  <div class="portal-card">
+    <a href="/" class="back-home">← Kembali ke website</a>
+    <a href="/" class="brand"><img src="assets/images/logo.png" alt="KidsPodu" class="brand-mark"></a>
+    <h1 class="portal-title">Portal KidsPodu Team</h1>
+    <p class="portal-sub">Khusus untuk pengurus &amp; tenaga profesional KidsPodu</p>
+
+    <div class="portal-error" id="login-error">Email atau kata sandi salah. Coba lagi.</div>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="nama@kidspodu.id" required />
+      </div>
+      <div class="field">
+        <label for="password">Kata Sandi</label>
+        <div class="pw-field-wrap">
+          <input type="password" id="password" name="password" placeholder="••••••••" required />
+          <button type="button" class="pw-toggle" data-target="password" aria-label="Tampilkan password">
+            <svg class="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="ic-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a17.86 17.86 0 0 1-2.44 3.66"/><path d="M6.61 6.61A17.83 17.83 0 0 0 1 13s4 8 11 8a9.7 9.7 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary portal-submit">Masuk →</button>
+    </form>
+
+    <p class="portal-note">Lupa kata sandi? Hubungi admin di kidspodu.education@gmail.com</p>
+  </div>
+</div>
+
+<script type="module">
+  import { auth, db, isFirebaseConfigured } from "./js/firebase-config.js";
+  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const form = document.getElementById("login-form");
+  const errorBox = document.getElementById("login-error");
+
+  document.querySelectorAll(".pw-toggle").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const revealed = btn.classList.toggle("is-revealed");
+      input.type = revealed ? "text" : "password";
+      btn.setAttribute("aria-label", revealed ? "Sembunyikan password" : "Tampilkan password");
+    });
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorBox.style.display = "none";
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if (!isFirebaseConfigured) {
+      alert(
+        "Mode prototipe: Firebase belum terhubung.\n" +
+        "Isi konfigurasi di js/firebase-config.js, lalu aktifkan Authentication → Email/Password " +
+        "di Firebase Console dan buat akun untuk tiap pengurus di sana."
+      );
+      return;
+    }
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+
+      const userDoc = await getDoc(doc(db, "users", cred.user.uid));
+
+      if (!userDoc.exists()) {
+        errorBox.textContent = "Akun ini belum terdaftar sebagai admin atau pelatih. Hubungi admin KidsPodu.";
+        errorBox.style.display = "block";
+        return;
+      }
+
+      const role = userDoc.data().role;
+
+      if (role === "admin") {
+        window.location.href = "/dashboard-admin";
+      } else if (role === "pelatih") {
+        window.location.href = "/dashboard-pelatih";
+      } else {
+        errorBox.textContent = "Role akun ini belum dikenali (" + role + "). Hubungi admin KidsPodu.";
+        errorBox.style.display = "block";
+      }
+    } catch (err) {
+      const code = err.code || "";
+      let msg;
+      if (code === "auth/invalid-email" || code === "auth/user-not-found") {
+        msg = "Email tidak terdaftar.";
+      } else if (code === "auth/wrong-password") {
+        msg = "Password salah.";
+      } else if (code === "auth/invalid-credential") {
+        msg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+          ? "Email tidak terdaftar atau password salah."
+          : "Format email tidak valid.";
+      } else if (code === "auth/too-many-requests") {
+        msg = "Terlalu banyak percobaan gagal. Coba lagi beberapa saat lagi.";
+      } else {
+        msg = "Gagal masuk: " + (err.message || "periksa kembali email dan kata sandi.");
+      }
+      errorBox.textContent = msg;
+      errorBox.style.display = "block";
+    }
+  });
+</script>
+</body>
+</html>

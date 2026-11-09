@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+<title>Absensi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  body {
+    background: radial-gradient(circle at 8% 12%, #efeafe 0%, transparent 42%),
+                radial-gradient(circle at 95% 85%, #dff6f0 0%, transparent 45%),
+                linear-gradient(160deg, #f3f1fd 0%, #eef4fc 55%, #eaf5fd 100%);
+    min-height: 100vh;
+    padding: 26px;
+  }
+
+  .app-shell {
+    max-width: 1520px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+    display: flex;
+    overflow: hidden;
+    min-height: calc(100vh - 52px);
+  }
+
+  .sidebar {
+    width: 260px;
+    flex: none;
+    background: var(--purple-900);
+    color: #fff;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar .brand { display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 40px; padding: 0 8px; }
+  .sidebar .brand-mark { width: 76px; height: 76px; object-fit: contain; flex: none; }
+
+  .nav-group { display: flex; flex-direction: column; gap: 6px; }
+  .sidebar nav a, .sidebar nav button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; color: rgba(255,255,255,.68); font-family: inherit; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s;
+    background: transparent; border: none;
+  }
+  .sidebar nav a:hover, .sidebar nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .sidebar nav a.active { background: #fff; color: var(--purple-700); font-weight: 700; box-shadow: 0 8px 18px rgba(28,15,64,.18); }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .nav-bottom { border-top: 1px solid rgba(255,255,255,.12); padding-top: 16px; margin-top: 16px; }
+  .sidebar .nav-bottom button {
+    display: flex; align-items: center; width: 100%; text-align: left; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .15s, color .15s;
+    background: transparent; border: none; color: #ffb9a8;
+  }
+  .sidebar .nav-bottom button:hover { background: rgba(224,86,58,.18); color: #fff; }
+
+  .sidebar-toggle {
+    display: none; flex: none; width: 40px; height: 40px; align-items: center; justify-content: center;
+    background: #fff; border: 1.5px solid #f0eefb; border-radius: 12px; font-size: 19px; color: var(--purple-700);
+    cursor: pointer; box-shadow: var(--shadow-card);
+  }
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(20, 12, 40, .45); z-index: 999;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .main-content { flex: 1; padding: 32px 34px; min-width: 0; }
+  .main-topbar h1 { font-size: 23px; color: var(--ink); }
+  .main-topbar .sub { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+
+  .tabs { display: flex; gap: 8px; margin: 24px 0 20px; }
+  .tabs button { padding: 9px 18px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 600; color: var(--ink-soft); background: #fff; box-shadow: var(--shadow-card); }
+  .tabs button.active { background: var(--purple-600); color: #fff; }
+
+  .card { background: #fff; border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 24px; margin-bottom: 20px; }
+
+  .card-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .btn-refresh {
+    display: inline-flex; align-items: center; gap: 6px; flex: none; white-space: nowrap;
+    background: var(--purple-100); color: var(--purple-700); font-size: 12.5px; font-weight: 700;
+    padding: 8px 14px; border-radius: var(--radius-pill); border: none; cursor: pointer;
+  }
+  .btn-refresh:hover { background: var(--purple-600); color: #fff; }
+  .btn-refresh:disabled { opacity: .6; cursor: default; }
+  .btn-refresh-icon { display: inline-block; transition: transform .5s ease; }
+  .btn-refresh.is-spinning .btn-refresh-icon { animation: btn-refresh-spin .6s linear infinite; }
+  @keyframes btn-refresh-spin { to { transform: rotate(360deg); } }
+
+  .card h3 { font-size: 16px; margin-bottom: 4px; }
+  .card .card-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+
+  .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+  th { color: var(--ink-soft); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+  tr.clickable { cursor: pointer; }
+  tr.clickable:hover td { background: var(--sky); }
+  .empty-row td { text-align: center; color: var(--ink-soft); padding: 24px; }
+  .num-badge { display: inline-block; background: var(--purple-100); color: var(--purple-700); font-weight: 700; padding: 3px 11px; border-radius: var(--radius-pill); font-size: 12.5px; }
+
+  .breadcrumb { font-size: 13px; color: var(--purple-600); font-weight: 600; margin-bottom: 16px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; background: none; }
+  .breadcrumb:hover { text-decoration: underline; }
+
+  .detail-anak-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+  .btn-edit-anak {
+    flex: none; padding: 9px 16px; border-radius: var(--radius-pill); border: none; background: var(--purple-100);
+    color: var(--purple-700); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .15s, color .15s;
+  }
+  .btn-edit-anak:hover { background: var(--purple-600); color: #fff; }
+
+  .report-detail { background: var(--sky); border: 1.5px solid #ddd9f7; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+  .report-detail:hover { box-shadow: var(--shadow-card); border-color: var(--purple-400); }
+  .report-detail .rd-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .report-detail .rd-head strong { font-size: 14px; }
+  .report-detail .tag { display: inline-block; background: var(--purple-100); color: var(--purple-700); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: var(--radius-pill); }
+  .rd-head .tag-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: none; }
+  .report-detail p { font-size: 13.5px; color: var(--ink); line-height: 1.6; white-space: pre-wrap; }
+  .report-detail .anak-tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .report-detail .anak-tag { font-size: 11.5px; background: #fff; border: 1px solid #ddd9f7; padding: 3px 9px; border-radius: var(--radius-pill); }
+  .report-detail .foto-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .report-detail .foto-row img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; }
+  .report-detail .rd-more { font-size: 12px; color: var(--purple-600); font-weight: 700; margin-top: 8px; }
+
+  .search-bar { margin-bottom: 16px; }
+  .search-bar input {
+    width: 100%; max-width: 340px; padding: 10px 16px; border-radius: var(--radius-pill);
+    border: 1.5px solid #e3e0f5; font-size: 13.5px; font-family: inherit; outline: none;
+    transition: border-color .15s; background: #fff;
+  }
+  .search-bar input:focus { border-color: var(--purple-400); }
+
+  .search-filter-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin-bottom: 16px; }
+  .search-filter-row .search-bar { margin-bottom: 0; flex: 1 1 240px; }
+  .search-filter-row .filter-field { min-width: 180px; flex: 0 1 200px; }
+
+  .date-filter-wrap { position: relative; flex: 0 0 auto; min-width: 190px; }
+  .date-filter-btn {
+    width: 100%; text-align: left; padding: 9px 11px; border-radius: var(--radius-sm); border: 1.5px solid #e3e0f5;
+    font-size: 13px; font-family: inherit; background: #fff; color: var(--ink); cursor: pointer; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .date-filter-btn:hover, .date-filter-btn.active { border-color: var(--purple-400); }
+  .date-filter-panel {
+    display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; min-width: 230px;
+    background: #fff; border: 1.5px solid #e3e0f5; border-radius: var(--radius-sm); padding: 14px; box-shadow: var(--shadow-card);
+  }
+  .date-filter-panel.open { display: block; }
+  .date-filter-panel .filter-field { min-width: 0; }
+  .date-filter-panel .filter-field + .filter-field { margin-top: 10px; }
+  .date-filter-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .btn-apply-date {
+    padding: 9px 16px; border-radius: var(--radius-pill); border: none; background: var(--purple-600); color: #fff;
+    font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .15s;
+  }
+  .btn-apply-date:hover { background: var(--purple-700); }
+  .btn-reset-filter-all {
+    flex: 0 0 auto; padding: 9px 16px; border-radius: var(--radius-pill); border: 1.5px solid #e3e0f5; background: #fff;
+    color: var(--ink-soft); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s, color .15s;
+    white-space: nowrap;
+  }
+  .btn-reset-filter-all:hover { background: var(--sky); color: var(--purple-700); }
+
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .filter-field { display: flex; flex-direction: column; gap: 5px; min-width: 160px; flex: 1 1 160px; }
+  .filter-field label { font-size: 11px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .03em; }
+  .filter-field input, .filter-field select {
+    padding: 9px 11px; border-radius: var(--radius-sm); border: 1.5px solid #e3e0f5;
+    font-size: 13px; font-family: inherit; background: #fff; color: var(--ink);
+  }
+  .filter-field input:focus, .filter-field select:focus { outline: none; border-color: var(--purple-400); }
+  .filter-actions { flex: 0 0 auto; }
+  .btn-reset {
+    padding: 9px 16px; border-radius: var(--radius-pill); border: 1.5px solid #e3e0f5; background: #fff;
+    color: var(--ink-soft); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .btn-reset:hover { background: var(--sky); color: var(--purple-700); }
+
+  .summary-table td, .summary-table th { padding: 9px 12px; }
+  .summary-empty, .period-empty { color: var(--ink-soft); font-size: 13px; padding: 6px 0 2px; }
+
+  .period-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
+  .period-header > div:first-child { flex: 1 1 220px; }
+  .period-tabs { display: flex; gap: 6px; flex: 0 0 auto; }
+  .period-tabs button {
+    padding: 7px 15px; border-radius: var(--radius-pill); font-size: 12.5px; font-weight: 600;
+    color: var(--ink-soft); background: var(--sky); border: none; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .period-tabs button.active { background: var(--purple-600); color: #fff; }
+  .period-tabs button:hover:not(.active) { background: #ddeefb; }
+
+  .result-count { font-size: 12.5px; color: var(--ink-soft); margin: 2px 0 14px; }
+
+  .account-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .account-email { font-size: 13.5px; color: var(--ink); font-weight: 600; }
+  .btn-reset-pw {
+    padding: 10px 18px; border-radius: var(--radius-pill); border: none; background: var(--purple-600); color: #fff;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, opacity .15s; font-family: inherit;
+  }
+  .btn-reset-pw:hover:not(:disabled) { background: var(--purple-700); }
+  .btn-reset-pw:disabled { opacity: .55; cursor: not-allowed; }
+  .reset-pw-status { font-size: 12.5px; margin-top: 10px; }
+  .reset-pw-status.ok { color: #1a8a5a; }
+  .reset-pw-status.err { color: var(--coral-600); }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(36,31,92,.45); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+  .modal-overlay.open { display: flex; }
+  .modal-card { background: #fff; border-radius: var(--radius-md); padding: 26px; width: 100%; max-width: 380px; box-shadow: var(--shadow-pop); }
+  .modal-card h3 { font-size: 17px; margin-bottom: 4px; }
+  .modal-card .card-sub { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 16px; }
+  .modal-detail-card { max-width: 540px; max-height: 85vh; overflow-y: auto; }
+  .modal-detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .modal-detail-head h3 { margin-bottom: 2px; }
+  .modal-close-btn { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--sky); color: var(--ink-soft); font-size: 14px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+  .modal-close-btn:hover { background: var(--purple-100); color: var(--purple-700); }
+  .dl-badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 16px; }
+  .dl-badge { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: var(--radius-pill); background: var(--purple-100); color: var(--purple-700); text-transform: uppercase; letter-spacing: .03em; }
+  .dl-block { margin-bottom: 16px; }
+  .dl-block-label { font-size: 11.5px; font-weight: 700; color: var(--purple-700); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+  .dl-block p { font-size: 13.5px; color: var(--ink); line-height: 1.6; white-space: pre-wrap; }
+  .num-badge-hadir { background: #e3f7ef; color: #1a9c78; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); }
+  .num-badge-tidak-hadir { background: #fde9ea; color: var(--coral-600); font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); }
+  .tag-hadir { background: #e3f7ef !important; color: #1a9c78 !important; }
+  .tag-tidak-hadir { background: #fde9ea !important; color: var(--coral-600) !important; }
+
+  .dl-anak-block { background: var(--sky); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 10px; border: 1.5px solid #ddd9f7; }
+  .dl-anak-block .dl-anak-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+  .dl-anak-block strong { font-size: 13px; color: var(--ink); }
+  .dl-anak-block p { font-size: 13.5px; color: var(--ink); line-height: 1.6; white-space: pre-wrap; }
+  .dl-anak-actions { display: flex; gap: 6px; flex-wrap: wrap; flex: none; }
+  .dl-pdf-btn {
+    font-size: 11.5px; font-weight: 700; color: var(--purple-700); background: var(--purple-100);
+    border: none; border-radius: var(--radius-pill); padding: 5px 12px; cursor: pointer; font-family: inherit;
+  }
+  .dl-pdf-btn:hover { background: var(--purple-400); color: #fff; }
+  .dl-wa-btn {
+    font-size: 11.5px; font-weight: 700; color: #fff; background: #25D366;
+    border: none; border-radius: var(--radius-pill); padding: 5px 12px; cursor: pointer; font-family: inherit;
+  }
+  .dl-wa-btn:hover { background: #1ea952; }
+  .dl-wa-btn:disabled { background: #b9bcc2; cursor: not-allowed; }
+  .dl-foto-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .dl-foto-grid img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; cursor: zoom-in; }
+
+  @media (max-width: 1080px) {
+    body { padding: 0; }
+    .app-shell { border-radius: 0; min-height: 100vh; }
+    .sidebar-toggle { display: flex; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 260px; max-width: 80vw;
+      transform: translateX(-100%); transition: transform .25s ease; z-index: 1000; box-shadow: 0 0 0 transparent;
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 12px 0 32px rgba(20,12,40,.25); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a href="/dashboard-admin" class="brand"><img src="assets/images/logo.png" alt="KidsPodu" class="brand-mark"></a>
+
+    <nav class="nav-group">
+      <a href="/dashboard-admin">Dashboard</a>
+      <a href="/dashboard-admin-pendaftaran">Pendaftaran</a>
+      <a href="/dashboard-admin-laporan">Laporan</a>
+      <a href="/dashboard-admin-absensi" class="active">Absensi</a>
+      <a href="/dashboard-admin-artikel">Artikel</a>
+      <a href="/dashboard-admin-testimoni">Testimoni</a>
+      <a href="/dashboard-admin-team">Tim</a>
+      <a href="/dashboard-admin-sosmed">Sosmed</a>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="nav-bottom">
+      <button type="button" id="logout-btn">Keluar</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main-content">
+    <div class="main-topbar">
+      <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Buka menu">☰</button>
+      <div>
+        <h1>Absensi</h1>
+        <p class="sub" id="who-am-i">Memuat...</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="anak">Absensi Anak</button>
+      <button class="tab-btn" data-tab="pelatih">Absensi Pelatih</button>
+    </div>
+
+    <div id="content"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modal-detail-laporan">
+  <div class="modal-card modal-detail-card">
+    <div class="modal-detail-head">
+      <div>
+        <h3 id="dl-title">—</h3>
+        <p class="card-sub" id="dl-sub" style="margin-bottom:0;">—</p>
+      </div>
+      <button type="button" class="modal-close-btn" id="btn-close-detail">✕</button>
+    </div>
+    <div class="dl-badge-row" id="dl-badges"></div>
+    <div id="dl-body"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { guardDashboard, wireLogout } from "./js/auth-guard.js";
+  import { listAnak } from "./js/anak-service.js";
+  import { listPelatih, sendPelatihPasswordReset } from "./js/pelatih-service.js";
+  import { getPrograms } from "./js/data.js";
+  import {
+    listAllLaporan, formatTanggal,
+    filterByDateRange, groupSessionsByPeriod, countByLabel,
+    TIPE_SESI_LABEL, getAllowedTipeSesi, isTipeMultiAnak, isAnakHadir, countKehadiranAnak,
+  } from "./js/report-service.js";
+  import { openReportDetailModal, wireReportDetailModalClose } from "./js/report-detail-modal.js";
+  import { openAnakEditModal } from "./js/anak-edit-modal.js";
+
+  guardDashboard("admin", (userData) => {
+    document.getElementById("who-am-i").textContent =
+      `Masuk sebagai ${userData.name || userData.email} · Admin`;
+  });
+  wireLogout("#logout-btn");
+
+  const sidebarEl = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  function openSidebar() { sidebarEl.classList.add("open"); sidebarOverlay.classList.add("open"); }
+  function closeSidebar() { sidebarEl.classList.remove("open"); sidebarOverlay.classList.remove("open"); }
+  sidebarToggle.addEventListener("click", () => {
+    sidebarEl.classList.contains("open") ? closeSidebar() : openSidebar();
+  });
+  sidebarOverlay.addEventListener("click", closeSidebar);
+  sidebarEl.querySelectorAll("a, button").forEach((el) => el.addEventListener("click", closeSidebar));
+  wireReportDetailModalClose();
+
+  const content = document.getElementById("content");
+  content.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Memuat data absensi...</p>`;
+
+  function buildProgramFilterOptions(programsList) {
+    const opts = [];
+    programsList.forEach((p) => {
+      if (p.id === "olahraga") {
+        (p.items || []).forEach((item) => opts.push({ value: `olahraga::${item}`, label: `Olahraga (${item})` }));
+      } else {
+        opts.push({ value: p.id, label: p.title });
+      }
+    });
+    return opts;
+  }
+  function matchesProgramFilter(r, val) {
+    if (!val) return true;
+    if (val.includes("::")) {
+      const [pid, sub] = val.split("::");
+      return r.programId === pid && r.subProgram === sub;
+    }
+    return r.programId === val;
+  }
+
+  function buildProgramSummaryRows(programsList, list) {
+    return buildProgramFilterOptions(programsList).map((opt) => ({
+      label: opt.label,
+      count: list.filter((r) => matchesProgramFilter(r, opt.value)).length,
+    }));
+  }
+
+  function buildProgramSummaryRowsAnak(programsList, list) {
+    const rows = [];
+    programsList.forEach((p) => {
+      if (p.id === "olahraga") {
+        (p.items || []).forEach((item) => {
+          getAllowedTipeSesi(p.id, item).forEach((tipe) => {
+            const count = list.filter((r) =>
+              r.programId === "olahraga" && r.subProgram === item && r.tipe === tipe
+            ).length;
+            rows.push({ label: `Olahraga (${item}) – ${TIPE_SESI_LABEL[tipe] || tipe}`, count });
+          });
+        });
+      } else {
+        rows.push({ label: p.title, count: list.filter((r) => r.programId === p.id).length });
+      }
+    });
+    return rows;
+  }
+
+  function renderProgramSummaryTable(rows) {
+    return rows.length ? `
+      <div class="table-scroll">
+      <table class="summary-table">
+        <thead><tr><th>Program</th><th>Jumlah Sesi</th></tr></thead>
+        <tbody>
+          ${rows.map((r) => `<tr><td>${r.label}</td><td><span class="num-badge">${r.count} sesi</span></td></tr>`).join("")}
+        </tbody>
+      </table>
+      </div>
+    ` : `<p class="summary-empty">Tidak ada data untuk filter yang dipilih.</p>`;
+  }
+
+  let activeTab = "anak";
+  let anakList = [], pelatihList = [], allLaporan = [], programs = [];
+  let loadError = null;
+
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeTab = btn.dataset.tab;
+      renderList();
+    });
+  });
+
+  try {
+    [anakList, pelatihList, allLaporan, programs] = await Promise.all([listAnak(), listPelatih(), listAllLaporan(), getPrograms()]);
+  } catch (err) {
+    console.error(err);
+    loadError = err;
+  }
+
+  async function reloadAllData() {
+    try {
+      [anakList, pelatihList, allLaporan, programs] = await Promise.all([listAnak(), listPelatih(), listAllLaporan(), getPrograms()]);
+      loadError = null;
+    } catch (err) {
+      console.error(err);
+      loadError = err;
+    }
+    renderList();
+  }
+
+  function renderList() {
+    if (loadError) {
+      content.innerHTML = `<div class="card"><p style="color:var(--coral-600); font-size:13.5px;">Gagal memuat data absensi: ${loadError.message}</p></div>`;
+      return;
+    }
+    if (activeTab === "anak") renderAnakList();
+    else renderPelatihList();
+  }
+
+  function formatDateRangeLabel(start, end) {
+    if (!start && !end) return "📅 Semua Tanggal";
+    if (start && end) return `📅 ${start} → ${end}`;
+    if (start) return `📅 Dari ${start}`;
+    return `📅 Sampai ${end}`;
+  }
+  function wireDateFilterPopover(prefix, getFilters, onApply) {
+    const btn = document.getElementById(`${prefix}-date-btn`);
+    const panel = document.getElementById(`${prefix}-date-panel`);
+    if (!btn || !panel) return;
+
+    function outsideCloser(e) {
+      if (!panel.contains(e.target) && e.target !== btn) {
+        panel.classList.remove("open");
+        btn.classList.remove("active");
+        document.removeEventListener("click", outsideCloser);
+      }
+    }
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const willOpen = !panel.classList.contains("open");
+      panel.classList.toggle("open", willOpen);
+      btn.classList.toggle("active", willOpen);
+      if (willOpen) document.addEventListener("click", outsideCloser);
+      else document.removeEventListener("click", outsideCloser);
+    });
+    document.getElementById(`${prefix}-date-apply`).addEventListener("click", () => {
+      const start = document.getElementById(`${prefix}-date-start`).value;
+      const end = document.getElementById(`${prefix}-date-end`).value;
+      panel.classList.remove("open");
+      btn.classList.remove("active");
+      document.removeEventListener("click", outsideCloser);
+      onApply(start, end);
+    });
+    document.getElementById(`${prefix}-date-clear`).addEventListener("click", () => {
+      panel.classList.remove("open");
+      btn.classList.remove("active");
+      document.removeEventListener("click", outsideCloser);
+      onApply("", "");
+    });
+  }
+
+  let anakSearch = "";
+  let anakFilterProgram = "";
+  let anakFilterKelas = "";
+  let anakFilterStart = "";
+  let anakFilterEnd = "";
+
+  function anakKelasOptions() {
+    if (!anakFilterProgram) return ["private", "semiprivate", "kelompok"];
+    if (anakFilterProgram.includes("::")) {
+      const [pid, sub] = anakFilterProgram.split("::");
+      return getAllowedTipeSesi(pid, sub);
+    }
+    return getAllowedTipeSesi(anakFilterProgram, undefined);
+  }
+
+  function renderAnakList() {
+    const programFilterOptions = buildProgramFilterOptions(programs);
+    const kelasOptions = anakKelasOptions();
+    const anakFilterActive = !!(anakFilterProgram || anakFilterKelas || anakFilterStart || anakFilterEnd);
+
+    const rows = anakList
+      .map((a) => {
+        const anakReports = allLaporan.filter((r) => (r.anakIds || []).includes(a.id));
+        const totalCount = anakReports.length;
+        let filteredList = filterByDateRange(anakReports, anakFilterStart, anakFilterEnd);
+        filteredList = filteredList.filter((r) =>
+          matchesProgramFilter(r, anakFilterProgram) && (!anakFilterKelas || r.tipe === anakFilterKelas)
+        );
+        const { hadir, tidakHadir } = countKehadiranAnak(filteredList, a.id);
+        return { id: a.id, nama: a.nama, status: a.status || "aktif", filteredCount: filteredList.length, totalCount, hadir, tidakHadir };
+      })
+      .filter((r) => r.nama.toLowerCase().includes(anakSearch.trim().toLowerCase()))
+      .filter((r) => !anakFilterActive || r.filteredCount > 0);
+
+    content.innerHTML = `
+      <div class="card">
+        <div class="card-header-row">
+          <h3>Absensi Anak</h3>
+          <button type="button" class="btn-refresh" id="btn-refresh-absensi-anak" title="Muat ulang data absensi anak">
+            <span class="btn-refresh-icon">⟳</span> Refresh
+          </button>
+        </div>
+        <div class="search-filter-row">
+          <div class="search-bar">
+            <input type="text" id="anak-search" placeholder="🔍 Cari nama anak..." value="${anakSearch.replace(/"/g, "&quot;")}" />
+          </div>
+          <div class="filter-field">
+            <label>Program</label>
+            <select id="anak-filter-program">
+              <option value="">Semua Program</option>
+              ${programFilterOptions.map((p) => `<option value="${p.value}" ${p.value === anakFilterProgram ? "selected" : ""}>${p.label}</option>`).join("")}
+            </select>
+          </div>
+          <div class="filter-field">
+            <label>Jenis Kelas</label>
+            <select id="anak-filter-kelas">
+              <option value="">Semua Kelas</option>
+              ${kelasOptions.map((t) => `<option value="${t}" ${t === anakFilterKelas ? "selected" : ""}>${TIPE_SESI_LABEL[t] || t}</option>`).join("")}
+            </select>
+          </div>
+          <div class="date-filter-wrap">
+            <label style="font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; display:block; margin-bottom:5px;">Tanggal</label>
+            <button type="button" class="date-filter-btn" id="anak-date-btn">${formatDateRangeLabel(anakFilterStart, anakFilterEnd)}</button>
+            <div class="date-filter-panel" id="anak-date-panel">
+              <div class="filter-field">
+                <label>Dari Tanggal</label>
+                <input type="date" id="anak-date-start" value="${anakFilterStart}" />
+              </div>
+              <div class="filter-field">
+                <label>Sampai Tanggal</label>
+                <input type="date" id="anak-date-end" value="${anakFilterEnd}" />
+              </div>
+              <div class="date-filter-actions">
+                <button type="button" class="btn-reset" id="anak-date-clear">Bersihkan</button>
+                <button type="button" class="btn-apply-date" id="anak-date-apply">Terapkan</button>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-reset-filter-all" id="anak-reset-filter">Reset Filter</button>
+        </div>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>No</th><th>Nama Anak</th><th>Status</th><th>Hadir</th><th>Tidak Hadir</th><th>Sesi</th><th>Total Sesi</th></tr></thead>
+          <tbody>
+            ${rows.length ? rows.map((r, idx) => `
+              <tr class="clickable" data-id="${r.id}" data-nama="${r.nama}">
+                <td>${idx + 1}</td>
+                <td>${r.nama}</td>
+                <td>${r.status}</td>
+                <td><span class="num-badge-hadir">${r.hadir} hadir</span></td>
+                <td><span class="num-badge-tidak-hadir">${r.tidakHadir} tidak hadir</span></td>
+                <td><span class="num-badge">${r.filteredCount} sesi</span></td>
+                <td><span class="num-badge">${r.totalCount} sesi</span></td>
+              </tr>
+            `).join("") : `<tr class="empty-row"><td colspan="7">${!anakList.length ? "Belum ada anak terdaftar." : anakFilterActive ? "Tidak ada anak dengan sesi yang cocok dengan filter ini." : "Tidak ada anak yang cocok dengan pencarian."}</td></tr>`}
+          </tbody>
+        </table>
+        </div>
+      </div>
+    `;
+    content.querySelectorAll("tr.clickable").forEach((tr) => {
+      tr.addEventListener("click", () => renderAnakDetail(tr.dataset.id, tr.dataset.nama));
+    });
+
+    const btnRefreshAbsensiAnak = document.getElementById("btn-refresh-absensi-anak");
+    btnRefreshAbsensiAnak.addEventListener("click", async () => {
+      btnRefreshAbsensiAnak.disabled = true;
+      btnRefreshAbsensiAnak.classList.add("is-spinning");
+      await reloadAllData();
+    });
+
+    const searchInput = document.getElementById("anak-search");
+    searchInput.addEventListener("input", (e) => {
+      anakSearch = e.target.value;
+      renderAnakList();
+      const el = document.getElementById("anak-search");
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+
+    document.getElementById("anak-filter-program").addEventListener("change", (e) => {
+      anakFilterProgram = e.target.value;
+      anakFilterKelas = "";
+      renderAnakList();
+    });
+    document.getElementById("anak-filter-kelas").addEventListener("change", (e) => {
+      anakFilterKelas = e.target.value;
+      renderAnakList();
+    });
+    wireDateFilterPopover("anak", () => ({ start: anakFilterStart, end: anakFilterEnd }), (start, end) => {
+      anakFilterStart = start;
+      anakFilterEnd = end;
+      renderAnakList();
+    });
+    document.getElementById("anak-reset-filter").addEventListener("click", () => {
+      anakFilterProgram = "";
+      anakFilterKelas = "";
+      anakFilterStart = "";
+      anakFilterEnd = "";
+      renderAnakList();
+    });
+  }
+
+  function renderAnakDetail(anakId, nama) {
+    const allReportsAnak = allLaporan.filter((r) => (r.anakIds || []).includes(anakId));
+
+    const programFilterOptions = buildProgramFilterOptions(programs);
+    const pelatihOptions = Array.from(new Set(allReportsAnak.map((r) => r.pelatihNama).filter(Boolean))).sort();
+
+    let filters = { start: "", end: "", program: "", kelas: "", pelatih: "" };
+    let periodMode = "minggu";
+
+    content.innerHTML = `
+      <button class="breadcrumb" id="back-btn">← Kembali ke daftar anak</button>
+
+      <div class="card">
+        <div class="detail-anak-head">
+          <div>
+            <h3>Detail Absensi — ${nama}</h3>
+            <p class="card-sub" style="margin-bottom:0;">Filter sesi anak ini berdasarkan tanggal, program, jenis kelas, dan pelatih.</p>
+          </div>
+          <button class="btn-edit-anak" id="edit-anak-btn" type="button">✏️ Edit Data Anak</button>
+        </div>
+        <div class="filter-bar" style="margin-top:16px;">
+          <div class="filter-field">
+            <label>Dari Tanggal</label>
+            <input type="date" id="f-start" />
+          </div>
+          <div class="filter-field">
+            <label>Sampai Tanggal</label>
+            <input type="date" id="f-end" />
+          </div>
+          <div class="filter-field">
+            <label>Program</label>
+            <select id="f-program">
+              <option value="">Semua Program</option>
+              ${programFilterOptions.map((p) => `<option value="${p.value}">${p.label}</option>`).join("")}
+            </select>
+          </div>
+          <div class="filter-field">
+            <label>Jenis Kelas</label>
+            <select id="f-kelas">
+              <option value="">Semua Kelas</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label>Pelatih</label>
+            <select id="f-pelatih">
+              <option value="">Semua Pelatih</option>
+              ${pelatihOptions.map((p) => `<option value="${p}">${p}</option>`).join("")}
+            </select>
+          </div>
+          <div class="filter-actions"><button class="btn-reset" id="f-reset" type="button">Reset Filter</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Ringkasan per Program</h3>
+        <p class="card-sub">Total sesi ${nama} di tiap program, mengikuti filter tanggal &amp; pelatih di atas.</p>
+        <div id="summary-program"></div>
+      </div>
+
+      <div class="card">
+        <h3>Ringkasan per Pelatih</h3>
+        <p class="card-sub">Jumlah sesi ${nama} bersama tiap pelatih (mengikuti filter di atas).</p>
+        <div id="summary-pelatih"></div>
+      </div>
+
+      <div class="card">
+        <div class="period-header">
+          <div>
+            <h3>Total Sesi per Periode</h3>
+            <p class="card-sub" style="margin-bottom:0;">Total sesi ${nama} dikelompokkan per minggu, bulan, atau tahun.</p>
+          </div>
+          <div class="period-tabs">
+            <button data-period="minggu" class="active" type="button">Mingguan</button>
+            <button data-period="bulan" type="button">Bulanan</button>
+            <button data-period="tahun" type="button">Tahunan</button>
+          </div>
+        </div>
+        <div id="period-summary"></div>
+      </div>
+
+      <div class="card">
+        <h3>Riwayat Sesi</h3>
+        <p class="result-count" id="result-count"></p>
+        <div id="detail-rows"></div>
+      </div>
+    `;
+    document.getElementById("back-btn").addEventListener("click", renderAnakList);
+
+    document.getElementById("edit-anak-btn").addEventListener("click", () => {
+      const anakObj = anakList.find((a) => a.id === anakId);
+      if (!anakObj) return;
+      openAnakEditModal(anakObj, programs, (updatedAnak) => {
+        const idx = anakList.findIndex((a) => a.id === anakId);
+        if (idx !== -1) anakList[idx] = { ...anakList[idx], ...updatedAnak };
+        renderAnakDetail(anakId, updatedAnak.nama || nama);
+      });
+    });
+
+    function getFiltered() {
+      let list = filterByDateRange(allReportsAnak, filters.start, filters.end);
+      list = list.filter((r) => matchesProgramFilter(r, filters.program));
+      if (filters.kelas) list = list.filter((r) => r.tipe === filters.kelas);
+      if (filters.pelatih) list = list.filter((r) => r.pelatihNama === filters.pelatih);
+      return list.sort((a, b) => (b.tanggal?.toMillis?.() || 0) - (a.tanggal?.toMillis?.() || 0));
+    }
+
+    function getFilteredForProgramSummary() {
+      let list = filterByDateRange(allReportsAnak, filters.start, filters.end);
+      if (filters.pelatih) list = list.filter((r) => r.pelatihNama === filters.pelatih);
+      return list;
+    }
+
+    function renderKelasOptions() {
+      const select = document.getElementById("f-kelas");
+      let tipes;
+      if (!filters.program) {
+        tipes = ["private", "semiprivate", "kelompok"];
+      } else if (filters.program.includes("::")) {
+        const [pid, sub] = filters.program.split("::");
+        tipes = getAllowedTipeSesi(pid, sub);
+      } else {
+        tipes = getAllowedTipeSesi(filters.program, undefined);
+      }
+      select.innerHTML = `<option value="">Semua Kelas</option>` +
+        tipes.map((t) => `<option value="${t}">${TIPE_SESI_LABEL[t] || t}</option>`).join("");
+      select.value = filters.kelas;
+    }
+    renderKelasOptions();
+
+    function renderAll() {
+      const filtered = getFiltered();
+
+      const programRows = buildProgramSummaryRowsAnak(programs, getFilteredForProgramSummary());
+      document.getElementById("summary-program").innerHTML = renderProgramSummaryTable(programRows);
+
+      const summary = countByLabel(filtered, (r) => r.pelatihNama);
+      document.getElementById("summary-pelatih").innerHTML = summary.length ? `
+        <div class="table-scroll">
+        <table class="summary-table">
+          <thead><tr><th>Nama Pelatih</th><th>Jumlah Sesi</th></tr></thead>
+          <tbody>
+            ${summary.map((s) => `<tr><td>${s.nama}</td><td><span class="num-badge">${s.count} sesi</span></td></tr>`).join("")}
+          </tbody>
+        </table>
+        </div>
+      ` : `<p class="summary-empty">Tidak ada data untuk filter yang dipilih.</p>`;
+
+      const periods = groupSessionsByPeriod(filtered, periodMode);
+      document.getElementById("period-summary").innerHTML = periods.length ? `
+        <div class="table-scroll">
+        <table class="summary-table">
+          <thead><tr><th>Periode</th><th>Total Sesi</th></tr></thead>
+          <tbody>
+            ${periods.map((p) => `<tr><td>${p.label}</td><td><span class="num-badge">${p.count} sesi</span></td></tr>`).join("")}
+          </tbody>
+        </table>
+        </div>
+      ` : `<p class="period-empty">Tidak ada data untuk filter yang dipilih.</p>`;
+
+      const { hadir: hadirCount, tidakHadir: tidakHadirCount } = countKehadiranAnak(filtered, anakId);
+      document.getElementById("result-count").textContent =
+        `${filtered.length} sesi tercatat (${hadirCount} hadir, ${tidakHadirCount} tidak hadir), urut dari terbaru. Klik salah satu untuk lihat detail lengkap.`;
+      const rowsWrap = document.getElementById("detail-rows");
+      rowsWrap.innerHTML = filtered.map((r) => {
+        const anakEntry = (r.anakList || []).find((a) => a.anakId === anakId);
+        const hadirTag = isTipeMultiAnak(r.tipe)
+          ? (isAnakHadir(anakEntry) ? `<span class="tag tag-hadir">✓ Hadir</span>` : `<span class="tag tag-tidak-hadir">✕ Tidak Hadir</span>`)
+          : "";
+        return `
+          <div class="report-detail" data-id="${r.id}">
+            <div class="rd-head">
+              <strong>${formatTanggal(r.tanggal)} · ${r.programTitle} – ${r.subProgram}</strong>
+              <div class="tag-group">
+                <span class="tag">${TIPE_SESI_LABEL[r.tipe] || "Private"}</span>
+                ${hadirTag}
+              </div>
+            </div>
+            <p><em style="color:var(--ink-soft); font-size:12.5px;">Pelatih: ${r.pelatihNama}</em></p>
+            ${anakEntry?.catatanKhusus ? `<div style="margin-top:8px; padding-top:8px; border-top:1px dashed #ddd9f7;"><strong style="font-size:12.5px;">Catatan khusus:</strong><p>${anakEntry.catatanKhusus}</p></div>` : ""}
+            <p class="rd-more">Lihat detail laporan →</p>
+          </div>
+        `;
+      }).join("") || `<p style="color:var(--ink-soft); font-size:13px;">Belum ada laporan untuk filter ini.</p>`;
+
+      rowsWrap.querySelectorAll(".report-detail").forEach((card) => {
+        card.addEventListener("click", () => {
+          const report = filtered.find((r) => r.id === card.dataset.id);
+          openReportDetailModal(report, {
+            canDelete: true,
+            onDeleted: (id) => { allLaporan = allLaporan.filter((r) => r.id !== id); renderAll(); },
+          });
+        });
+      });
+    }
+
+    document.getElementById("f-start").addEventListener("change", (e) => { filters.start = e.target.value; renderAll(); });
+    document.getElementById("f-end").addEventListener("change", (e) => { filters.end = e.target.value; renderAll(); });
+    document.getElementById("f-program").addEventListener("change", (e) => {
+      filters.program = e.target.value;
+      filters.kelas = "";
+      renderKelasOptions();
+      renderAll();
+    });
+    document.getElementById("f-kelas").addEventListener("change", (e) => { filters.kelas = e.target.value; renderAll(); });
+    document.getElementById("f-pelatih").addEventListener("change", (e) => { filters.pelatih = e.target.value; renderAll(); });
+    document.getElementById("f-reset").addEventListener("click", () => {
+      filters = { start: "", end: "", program: "", kelas: "", pelatih: "" };
+      document.getElementById("f-start").value = "";
+      document.getElementById("f-end").value = "";
+      document.getElementById("f-program").value = "";
+      renderKelasOptions();
+      document.getElementById("f-pelatih").value = "";
+      renderAll();
+    });
+    content.querySelectorAll(".period-tabs button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        content.querySelectorAll(".period-tabs button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        periodMode = btn.dataset.period;
+        renderAll();
+      });
+    });
+
+    renderAll();
+  }
+
+  let pelatihSearch = "";
+  let pelatihFilterProgram = "";
+  let pelatihFilterStart = "";
+  let pelatihFilterEnd = "";
+
+  function renderPelatihList() {
+    const programFilterOptions = buildProgramFilterOptions(programs);
+    const pelatihFilterActive = !!(pelatihFilterProgram || pelatihFilterStart || pelatihFilterEnd);
+
+    const rows = pelatihList
+      .map((p) => {
+        const pelatihReports = allLaporan.filter((r) => r.pelatihUid === p.uid);
+        const totalCount = pelatihReports.length;
+        let filteredList = filterByDateRange(pelatihReports, pelatihFilterStart, pelatihFilterEnd);
+        filteredList = filteredList.filter((r) => matchesProgramFilter(r, pelatihFilterProgram));
+        return { uid: p.uid, nama: p.name, status: p.status || "aktif", filteredCount: filteredList.length, totalCount };
+      })
+      .filter((r) => r.nama.toLowerCase().includes(pelatihSearch.trim().toLowerCase()))
+      .filter((r) => !pelatihFilterActive || r.filteredCount > 0);
+
+    content.innerHTML = `
+      <div class="card">
+        <div class="card-header-row">
+          <h3>Absensi Pelatih</h3>
+          <button type="button" class="btn-refresh" id="btn-refresh-absensi-pelatih" title="Muat ulang data absensi pelatih">
+            <span class="btn-refresh-icon">⟳</span> Refresh
+          </button>
+        </div>
+        <div class="search-filter-row">
+          <div class="search-bar">
+            <input type="text" id="pelatih-search" placeholder="🔍 Cari nama pelatih..." value="${pelatihSearch.replace(/"/g, "&quot;")}" />
+          </div>
+          <div class="filter-field">
+            <label>Program</label>
+            <select id="pelatih-filter-program">
+              <option value="">Semua Program</option>
+              ${programFilterOptions.map((p) => `<option value="${p.value}" ${p.value === pelatihFilterProgram ? "selected" : ""}>${p.label}</option>`).join("")}
+            </select>
+          </div>
+          <div class="date-filter-wrap">
+            <label style="font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; display:block; margin-bottom:5px;">Tanggal</label>
+            <button type="button" class="date-filter-btn" id="pelatih-date-btn">${formatDateRangeLabel(pelatihFilterStart, pelatihFilterEnd)}</button>
+            <div class="date-filter-panel" id="pelatih-date-panel">
+              <div class="filter-field">
+                <label>Dari Tanggal</label>
+                <input type="date" id="pelatih-date-start" value="${pelatihFilterStart}" />
+              </div>
+              <div class="filter-field">
+                <label>Sampai Tanggal</label>
+                <input type="date" id="pelatih-date-end" value="${pelatihFilterEnd}" />
+              </div>
+              <div class="date-filter-actions">
+                <button type="button" class="btn-reset" id="pelatih-date-clear">Bersihkan</button>
+                <button type="button" class="btn-apply-date" id="pelatih-date-apply">Terapkan</button>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-reset-filter-all" id="pelatih-reset-filter">Reset Filter</button>
+        </div>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>No</th><th>Nama Pelatih</th><th>Status</th><th>Jumlah per Program</th><th>Total Sesi</th></tr></thead>
+          <tbody>
+            ${rows.length ? rows.map((r, idx) => `
+              <tr class="clickable" data-uid="${r.uid}" data-nama="${r.nama}">
+                <td>${idx + 1}</td>
+                <td>${r.nama}</td>
+                <td>${r.status}</td>
+                <td><span class="num-badge">${r.filteredCount} sesi</span></td>
+                <td><span class="num-badge">${r.totalCount} sesi</span></td>
+              </tr>
+            `).join("") : `<tr class="empty-row"><td colspan="5">${!pelatihList.length ? "Belum ada pelatih terdaftar." : pelatihFilterActive ? "Tidak ada pelatih dengan sesi yang cocok dengan filter ini." : "Tidak ada pelatih yang cocok dengan pencarian."}</td></tr>`}
+          </tbody>
+        </table>
+        </div>
+      </div>
+    `;
+    content.querySelectorAll("tr.clickable").forEach((tr) => {
+      tr.addEventListener("click", () => renderPelatihDetail(tr.dataset.uid, tr.dataset.nama));
+    });
+
+    const btnRefreshAbsensiPelatih = document.getElementById("btn-refresh-absensi-pelatih");
+    btnRefreshAbsensiPelatih.addEventListener("click", async () => {
+      btnRefreshAbsensiPelatih.disabled = true;
+      btnRefreshAbsensiPelatih.classList.add("is-spinning");
+      await reloadAllData();
+    });
+
+    const searchInput = document.getElementById("pelatih-search");
+    searchInput.addEventListener("input", (e) => {
+      pelatihSearch = e.target.value;
+      renderPelatihList();
+      const el = document.getElementById("pelatih-search");
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+
+    document.getElementById("pelatih-filter-program").addEventListener("change", (e) => {
+      pelatihFilterProgram = e.target.value;
+      renderPelatihList();
+    });
+    wireDateFilterPopover("pelatih", () => ({ start: pelatihFilterStart, end: pelatihFilterEnd }), (start, end) => {
+      pelatihFilterStart = start;
+      pelatihFilterEnd = end;
+      renderPelatihList();
+    });
+    document.getElementById("pelatih-reset-filter").addEventListener("click", () => {
+      pelatihFilterProgram = "";
+      pelatihFilterStart = "";
+      pelatihFilterEnd = "";
+      renderPelatihList();
+    });
+  }
+
+  function renderPelatihDetail(uid, nama) {
+    const allReportsPelatih = allLaporan.filter((r) => r.pelatihUid === uid);
+    const pelatihObj = pelatihList.find((p) => p.uid === uid);
+    const email = pelatihObj?.email || "";
+
+    const anakOptions = Array.from(
+      new Set(allReportsPelatih.flatMap((r) => (r.anakList || []).map((a) => a.nama)).filter(Boolean))
+    ).sort();
+    const programFilterOptions = buildProgramFilterOptions(programs);
+
+    let filters = { start: "", end: "", program: "", anak: "" };
+    let periodMode = "minggu";
+
+    content.innerHTML = `
+      <button class="breadcrumb" id="back-btn">← Kembali ke daftar pelatih</button>
+
+      <div class="card">
+        <h3>Akun Pelatih</h3>
+        <p class="card-sub">Kalau ${nama} lupa password, admin bisa kirim link reset password ke email akunnya — ${nama} lalu membuat password baru sendiri lewat link tersebut.</p>
+        <div class="account-row">
+          <div class="account-email">📧 ${email || "Email tidak tercatat untuk akun ini"}</div>
+          <button class="btn-reset-pw" id="reset-pw-btn" type="button" ${email ? "" : "disabled"}>Kirim Email Reset Password</button>
+        </div>
+        <p class="reset-pw-status" id="reset-pw-status"></p>
+      </div>
+
+      <div class="card">
+        <h3>Detail Absensi — ${nama}</h3>
+        <p class="card-sub">Filter sesi pelatih ini berdasarkan tanggal, program, dan nama anak.</p>
+        <div class="filter-bar">
+          <div class="filter-field">
+            <label>Dari Tanggal</label>
+            <input type="date" id="f-start" />
+          </div>
+          <div class="filter-field">
+            <label>Sampai Tanggal</label>
+            <input type="date" id="f-end" />
+          </div>
+          <div class="filter-field">
+            <label>Program</label>
+            <select id="f-program">
+              <option value="">Semua Program</option>
+              ${programFilterOptions.map((p) => `<option value="${p.value}">${p.label}</option>`).join("")}
+            </select>
+          </div>
+          <div class="filter-field">
+            <label>Nama Anak</label>
+            <select id="f-anak">
+              <option value="">Semua Anak</option>
+              ${anakOptions.map((a) => `<option value="${a}">${a}</option>`).join("")}
+            </select>
+          </div>
+          <div class="filter-actions"><button class="btn-reset" id="f-reset" type="button">Reset Filter</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Ringkasan per Program</h3>
+        <p class="card-sub">Total sesi pelatih ${nama} di tiap program, mengikuti filter tanggal &amp; anak di atas.</p>
+        <div id="summary-program"></div>
+      </div>
+
+      <div class="card">
+        <h3>Ringkasan per Anak</h3>
+        <p class="card-sub">Jumlah sesi pelatih ${nama} bersama tiap anak (mengikuti filter di atas).</p>
+        <div id="summary-anak"></div>
+      </div>
+
+      <div class="card">
+        <div class="period-header">
+          <div>
+            <h3>Total Sesi per Periode</h3>
+            <p class="card-sub" style="margin-bottom:0;">Total sesi pelatih ${nama} dikelompokkan per minggu, bulan, atau tahun.</p>
+          </div>
+          <div class="period-tabs">
+            <button data-period="minggu" class="active" type="button">Mingguan</button>
+            <button data-period="bulan" type="button">Bulanan</button>
+            <button data-period="tahun" type="button">Tahunan</button>
+          </div>
+        </div>
+        <div id="period-summary"></div>
+      </div>
+
+      <div class="card">
+        <h3>Riwayat Sesi</h3>
+        <p class="result-count" id="result-count"></p>
+        <div id="detail-rows"></div>
+      </div>
+    `;
+    document.getElementById("back-btn").addEventListener("click", renderPelatihList);
+
+    const resetBtn = document.getElementById("reset-pw-btn");
+    const resetStatus = document.getElementById("reset-pw-status");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", async () => {
+        const confirmed = confirm(`Kirim email reset password ke ${email} untuk akun ${nama}?`);
+        if (!confirmed) return;
+
+        resetBtn.disabled = true;
+        resetBtn.textContent = "Mengirim...";
+        resetStatus.className = "reset-pw-status";
+        resetStatus.textContent = "";
+        try {
+          await sendPelatihPasswordReset(email);
+          resetStatus.className = "reset-pw-status ok";
+          resetStatus.textContent = `✅ Link reset password sudah dikirim ke ${email}. Minta ${nama} mengecek email (termasuk folder spam) dan mengikuti link tersebut untuk membuat password baru.`;
+        } catch (err) {
+          console.error(err);
+          resetStatus.className = "reset-pw-status err";
+          resetStatus.textContent = `Gagal mengirim email reset: ${err.message}`;
+        } finally {
+          resetBtn.disabled = false;
+          resetBtn.textContent = "Kirim Email Reset Password";
+        }
+      });
+    }
+
+    function getFiltered() {
+      let list = filterByDateRange(allReportsPelatih, filters.start, filters.end);
+      list = list.filter((r) => matchesProgramFilter(r, filters.program));
+      if (filters.anak) list = list.filter((r) => (r.anakList || []).some((a) => a.nama === filters.anak));
+      return list.sort((a, b) => (b.tanggal?.toMillis?.() || 0) - (a.tanggal?.toMillis?.() || 0));
+    }
+
+    function getFilteredForProgramSummary() {
+      let list = filterByDateRange(allReportsPelatih, filters.start, filters.end);
+      if (filters.anak) list = list.filter((r) => (r.anakList || []).some((a) => a.nama === filters.anak));
+      return list;
+    }
+
+    function renderAll() {
+      const filtered = getFiltered();
+
+      const programRows = buildProgramSummaryRows(programs, getFilteredForProgramSummary());
+      document.getElementById("summary-program").innerHTML = renderProgramSummaryTable(programRows);
+
+      const summary = countByLabel(filtered, (r) => (r.anakList || []).map((a) => a.nama));
+      document.getElementById("summary-anak").innerHTML = summary.length ? `
+        <div class="table-scroll">
+        <table class="summary-table">
+          <thead><tr><th>Nama Anak</th><th>Jumlah Sesi</th></tr></thead>
+          <tbody>
+            ${summary.map((s) => `<tr><td>${s.nama}</td><td><span class="num-badge">${s.count} sesi</span></td></tr>`).join("")}
+          </tbody>
+        </table>
+        </div>
+      ` : `<p class="summary-empty">Tidak ada data untuk filter yang dipilih.</p>`;
+
+      const periods = groupSessionsByPeriod(filtered, periodMode);
+      document.getElementById("period-summary").innerHTML = periods.length ? `
+        <div class="table-scroll">
+        <table class="summary-table">
+          <thead><tr><th>Periode</th><th>Total Sesi</th></tr></thead>
+          <tbody>
+            ${periods.map((p) => `<tr><td>${p.label}</td><td><span class="num-badge">${p.count} sesi</span></td></tr>`).join("")}
+          </tbody>
+        </table>
+        </div>
+      ` : `<p class="period-empty">Tidak ada data untuk filter yang dipilih.</p>`;
+
+      document.getElementById("result-count").textContent = `${filtered.length} sesi tercatat, urut dari terbaru. Klik salah satu untuk lihat detail lengkap.`;
+      const rowsWrap = document.getElementById("detail-rows");
+      rowsWrap.innerHTML = filtered.map((r) => `
+        <div class="report-detail" data-id="${r.id}">
+          <div class="rd-head">
+            <strong>${formatTanggal(r.tanggal)} · ${r.programTitle} – ${r.subProgram}</strong>
+            <span class="tag">${TIPE_SESI_LABEL[r.tipe] || "Private"}</span>
+          </div>
+          <div class="anak-tag-row">${(r.anakList || []).map((a) => `<span class="anak-tag">${a.nama}</span>`).join("")}</div>
+          <p class="rd-more">Lihat detail laporan →</p>
+        </div>
+      `).join("") || `<p style="color:var(--ink-soft); font-size:13px;">Belum ada laporan untuk filter ini.</p>`;
+
+      rowsWrap.querySelectorAll(".report-detail").forEach((card) => {
+        card.addEventListener("click", () => {
+          const report = filtered.find((r) => r.id === card.dataset.id);
+          openReportDetailModal(report, {
+            canDelete: true,
+            onDeleted: (id) => { allLaporan = allLaporan.filter((r) => r.id !== id); renderAll(); },
+          });
+        });
+      });
+    }
+
+    document.getElementById("f-start").addEventListener("change", (e) => { filters.start = e.target.value; renderAll(); });
+    document.getElementById("f-end").addEventListener("change", (e) => { filters.end = e.target.value; renderAll(); });
+    document.getElementById("f-program").addEventListener("change", (e) => { filters.program = e.target.value; renderAll(); });
+    document.getElementById("f-anak").addEventListener("change", (e) => { filters.anak = e.target.value; renderAll(); });
+    document.getElementById("f-reset").addEventListener("click", () => {
+      filters = { start: "", end: "", program: "", anak: "" };
+      document.getElementById("f-start").value = "";
+      document.getElementById("f-end").value = "";
+      document.getElementById("f-program").value = "";
+      document.getElementById("f-anak").value = "";
+      renderAll();
+    });
+    content.querySelectorAll(".period-tabs button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        content.querySelectorAll(".period-tabs button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        periodMode = btn.dataset.period;
+        renderAll();
+      });
+    });
+
+    renderAll();
+  }
+
+  const linkParams = new URLSearchParams(window.location.search);
+  const linkTab = linkParams.get("tab");
+  const linkUid = linkParams.get("uid");
+  const linkId = linkParams.get("id");
+  const linkNama = linkParams.get("nama");
+
+  if (!loadError && linkTab === "pelatih" && linkUid) {
+    activeTab = "pelatih";
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === "pelatih"));
+    renderPelatihDetail(linkUid, linkNama || pelatihList.find((p) => p.uid === linkUid)?.name || "");
+  } else if (!loadError && linkTab === "anak" && linkId) {
+    activeTab = "anak";
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === "anak"));
+    renderAnakDetail(linkId, linkNama || anakList.find((a) => a.id === linkId)?.nama || "");
+  } else {
+    renderList();
+  }
+</script>
+</body>
+</html>

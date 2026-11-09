@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "kidspodu-fe0fc"
+  },
+  "targets": {
+    "kidspodu-fe0fc": {
+      "hosting": {
+        "main": [
+          "kidspodu"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
